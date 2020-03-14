@@ -56,7 +56,7 @@ gorilla = taxopy.Taxon('9593', taxdb)
 lagomorpha = taxopy.Taxon('9975', taxdb)
 ```
 
-Each `Taxon` object stores a variety of information, such as the rank, identifier and name of the input taxon, and the identifiers and names of all the parent taxons:
+Each `Taxon` object stores a variety of information, such as the rank, identifier and name of the input taxon, and the identifiers and names of all the parent taxa:
 
 
 ```python
@@ -70,12 +70,23 @@ print(lagomorpha.name_lineage)
     ['Lagomorpha', 'Glires', 'Euarchontoglires', 'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota', 'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii', 'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata', 'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria', 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota', 'cellular organisms', 'root']
 
 
-You can get the lowest common ancestor of a list of taxons using the `find_lca` function:
+You can get the lowest common ancestor of a list of taxa using the `find_lca` function:
 
 
 ```python
-human_gorilla_lca = taxopy.find_lca([human, gorilla], taxdb)
-print(human_gorilla_lca.name)
+human_lagomorpha_lca = taxopy.find_lca([human, lagomorpha], taxdb)
+print(human_lagomorpha_lca.name)
+```
+
+    Euarchontoglires
+
+
+You may also use the `find_majority_vote` to discover the most specific taxon that is shared by more than half of the lineages of a list of taxa:
+
+
+```python
+majority_vote = taxopy.find_majority_vote([human, gorilla, lagomorpha], taxdb)
+print(majority_vote.name)
 ```
 
     Homininae

@@ -18,13 +18,16 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+from collections import Counter
+from itertools import zip_longest
 from taxopy.core import TaxDb, Taxon
-from taxopy.exceptions import DownloadError, ExtractionError, LCAError
+from taxopy.exceptions import LCAError, MajorityVoteError
 
 
 def find_lca(taxon_list: list, taxdb: TaxDb):
     """
-    Takes a list of multiple Taxon objects and computes their lowest common ancestor (LCA).
+    Takes a list of multiple Taxon objects and returns their lowest common
+    ancestor (LCA).
 
     Parameters
     ----------
@@ -50,3 +53,38 @@ def find_lca(taxon_list: list, taxdb: TaxDb):
     for taxid in lineage_list[0]:
         if taxid in overlap:
             return Taxon(taxid, taxdb)
+
+
+def find_majority_vote(taxon_list: list, taxdb: TaxDb):
+    """
+    Takes a list of multiple Taxon objects and returns the most specific taxon
+    that is shared by more than half of the input lineages.
+
+    Parameters
+    ----------
+    taxon_list : list
+        A list containing at least two Taxon objects.
+    destination : TaxDb
+        A TaxDb object.
+
+    Returns
+    -------
+    Taxon
+        The Taxon object of the most specific taxon that is shared by more than
+        half of the input lineages.
+
+    Raises
+    ------
+    MajorityVoteError
+        If the input list has less than three Taxon objects.
+    """
+    if len(taxon_list) < 3:
+        raise MajorityVoteError(
+            "The input list must contain at least three Taxon objects."
+        )
+    n_taxa = len(taxon_list)
+    zipped_taxid_lineage = zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
+    for taxonomic_level in reversed(list(zipped_taxid_lineage)):
+        majority_taxon = Counter(taxonomic_level).most_common()[0]
+        if majority_taxon[1] > n_taxa / 2:
+            return Taxon(majority_taxon[0], taxdb)

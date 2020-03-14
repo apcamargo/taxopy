@@ -27,5 +27,8 @@ class ExtractionError(Exception):
 class LCAError(Exception):
     pass
 
+class MajorityVoteError(Exception):
+    pass
+
 class TaxidError(Exception):
     pass

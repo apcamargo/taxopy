@@ -80,7 +80,7 @@ class TaxDb:
             self._taxdb_dir = taxdb_dir
         else:
             self._taxdb_dir = taxdb_dir
-        if not nodes_dmp or not names_dmp:
+        if not (nodes_dmp and names_dmp):
             self._nodes_dmp, self._names_dmp = self._download_taxonomy()
         else:
             self._nodes_dmp, self._names_dmp = nodes_dmp, names_dmp
@@ -170,7 +170,7 @@ class Taxon:
         from the most specific to the most general.
     rank_name_dictionary: dict
         A dictionary where the keys are named ranks and the values are the names
-        of the taxons that correspond to each of the named ranks in the lineage.
+        of the taxa that correspond to each of the named ranks in the lineage.
 
     Raises
     ------
