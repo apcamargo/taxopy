@@ -76,15 +76,15 @@ def find_majority_vote(taxon_list: list, taxdb: TaxDb):
     Raises
     ------
     MajorityVoteError
-        If the input list has less than three Taxon objects.
+        If the input list has less than two Taxon objects.
     """
-    if len(taxon_list) < 3:
+    if len(taxon_list) < 2:
         raise MajorityVoteError(
-            "The input list must contain at least three Taxon objects."
+            "The input list must contain at least two Taxon objects."
         )
     n_taxa = len(taxon_list)
     zipped_taxid_lineage = zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
     for taxonomic_level in reversed(list(zipped_taxid_lineage)):
         majority_taxon = Counter(taxonomic_level).most_common()[0]
-        if majority_taxon[1] > n_taxa / 2:
+        if majority_taxon[0] and majority_taxon[1] > n_taxa / 2:
             return Taxon(majority_taxon[0], taxdb)

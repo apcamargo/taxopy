@@ -191,7 +191,7 @@ class Taxon:
         )
 
     def __repr__(self):
-        return " -> ".join(reversed(self.name_lineage))
+        return " > ".join(reversed(self.name_lineage))
 
     def _find_lineage(self, taxid2parent):
         lineage = []
