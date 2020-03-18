@@ -21,6 +21,7 @@
 import os
 import tarfile
 import urllib.request
+
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
 

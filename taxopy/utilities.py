@@ -20,11 +20,13 @@
 
 from collections import Counter
 from itertools import zip_longest
+from typing import List
+
 from taxopy.core import TaxDb, Taxon
 from taxopy.exceptions import LCAError, MajorityVoteError
 
 
-def find_lca(taxon_list: list, taxdb: TaxDb):
+def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     """
     Takes a list of multiple Taxon objects and returns their lowest common
     ancestor (LCA).
@@ -55,7 +57,7 @@ def find_lca(taxon_list: list, taxdb: TaxDb):
             return Taxon(taxid, taxdb)
 
 
-def find_majority_vote(taxon_list: list, taxdb: TaxDb):
+def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     """
     Takes a list of multiple Taxon objects and returns the most specific taxon
     that is shared by more than half of the input lineages.
@@ -79,9 +81,7 @@ def find_majority_vote(taxon_list: list, taxdb: TaxDb):
         If the input list has less than two Taxon objects.
     """
     if len(taxon_list) < 2:
-        raise MajorityVoteError(
-            "The input list must contain at least two Taxon objects."
-        )
+        raise MajorityVoteError("The input list must contain at least two Taxon objects.")
     n_taxa = len(taxon_list)
     zipped_taxid_lineage = zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
     for taxonomic_level in reversed(list(zipped_taxid_lineage)):
