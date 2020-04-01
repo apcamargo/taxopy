@@ -35,7 +35,7 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     ----------
     taxon_list : list
         A list containing at least two Taxon objects.
-    destination : TaxDb
+    taxdb : TaxDb
         A TaxDb object.
 
     Returns
@@ -55,19 +55,24 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     for taxid in lineage_list[0]:
         if taxid in overlap:
             return Taxon(taxid, taxdb)
+    return Taxon("1", taxdb)
 
 
-def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
+def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 0.5) -> Taxon:
     """
     Takes a list of multiple Taxon objects and returns the most specific taxon
-    that is shared by more than half of the input lineages.
+    that is shared by more than the chosen fraction of the input lineages.
 
     Parameters
     ----------
     taxon_list : list
         A list containing at least two Taxon objects.
-    destination : TaxDb
+    taxdb : TaxDb
         A TaxDb object.
+    fraction: float, default 0.5
+        The returned taxon will be shared by more than `fraction` of the input
+        taxa lineages. This value must be equal to or greater than 0.5 and less
+        than 1.
 
     Returns
     -------
@@ -78,13 +83,17 @@ def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     Raises
     ------
     MajorityVoteError
-        If the input list has less than two Taxon objects.
+        If the input list has less than two Taxon objects or if the `fraction`
+        parameter is less than 0.5 or equal to or greater than 1.
     """
+    if fraction < 0.5 or fraction >= 1:
+        raise MajorityVoteError("The `fraction` parameter must be equal to or greater than 0.5 and less than 1.")
     if len(taxon_list) < 2:
         raise MajorityVoteError("The input list must contain at least two Taxon objects.")
     n_taxa = len(taxon_list)
     zipped_taxid_lineage = zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
     for taxonomic_level in reversed(list(zipped_taxid_lineage)):
         majority_taxon = Counter(taxonomic_level).most_common()[0]
-        if majority_taxon[0] and majority_taxon[1] > n_taxa / 2:
+        if majority_taxon[0] and majority_taxon[1] > n_taxa * fraction:
             return Taxon(majority_taxon[0], taxdb)
+    return Taxon("1", taxdb)

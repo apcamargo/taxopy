@@ -91,6 +91,8 @@ print(majority_vote.name)
 
     Homininae
 
+The `find_majority_vote` allows you to control its stringency via the `fraction` parameter. For instance, if you would set `fraction` to 0.75 the resulting taxon would be shared by more than 75% of the input lineages. By default, `fraction` is 0.5.
+
 ## Acknowledgements
 
 Some of the code used in taxopy was taken from the [CAT/BAT tool for taxonomic classification of contigs and metagenome-assembled genomes](https://github.com/dutilh/CAT).

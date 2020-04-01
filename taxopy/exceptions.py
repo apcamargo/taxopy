@@ -18,17 +18,22 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+
 class DownloadError(Exception):
     pass
+
 
 class ExtractionError(Exception):
     pass
 
+
 class LCAError(Exception):
     pass
 
+
 class MajorityVoteError(Exception):
     pass
+
 
 class TaxidError(Exception):
     pass
