@@ -32,7 +32,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     python_requires=">=3.5",
-    url="https://apcamargo.github.io/taxopy/",
+    url="https://github.com/apcamargo/taxopy",
     keywords=["bioinformatics", "taxonomy"],
     author="Antonio Pedro Camargo",
     author_email="antoniop.camargo@gmail.com",
