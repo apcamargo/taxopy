@@ -18,9 +18,9 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import zip_longest
-from typing import List
+from typing import List, Optional
 
 from taxopy.core import TaxDb, Taxon
 from taxopy.exceptions import LCAError, MajorityVoteError
@@ -58,7 +58,12 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     return Taxon("1", taxdb)
 
 
-def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 0.5) -> Taxon:
+def find_majority_vote(
+    taxon_list: List[Taxon],
+    taxdb: TaxDb,
+    fraction: float = 0.5,
+    weights: Optional[List[float]] = None,
+) -> Taxon:
     """
     Takes a list of multiple Taxon objects and returns the most specific taxon
     that is shared by more than the chosen fraction of the input lineages.
@@ -73,6 +78,9 @@ def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 
         The returned taxon will be shared by more than `fraction` of the input
         taxa lineages. This value must be equal to or greater than 0.5 and less
         than 1.
+    weights: list, optional
+        A list of weights associated with the taxa lineages in `taxon_list`.
+        These values are used to weight the votes of their associated lineages.
 
     Returns
     -------
@@ -83,17 +91,39 @@ def find_majority_vote(taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 
     Raises
     ------
     MajorityVoteError
-        If the input list has less than two Taxon objects or if the `fraction`
-        parameter is less than 0.5 or equal to or greater than 1.
+        If the input taxon list has less than two Taxon objects or if the
+        `fraction` parameter is less than 0.5 or equal to or greater than 1.
     """
     if fraction < 0.5 or fraction >= 1:
-        raise MajorityVoteError("The `fraction` parameter must be equal to or greater than 0.5 and less than 1.")
+        raise MajorityVoteError(
+            "The `fraction` parameter must be equal to or greater than 0.5 and less than 1."
+        )
     if len(taxon_list) < 2:
-        raise MajorityVoteError("The input list must contain at least two Taxon objects.")
-    n_taxa = len(taxon_list)
-    zipped_taxid_lineage = zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
-    for taxonomic_level in reversed(list(zipped_taxid_lineage)):
-        majority_taxon = Counter(taxonomic_level).most_common()[0]
-        if majority_taxon[0] and majority_taxon[1] > n_taxa * fraction:
-            return Taxon(majority_taxon[0], taxdb)
+        raise MajorityVoteError(
+            "The input taxon list must contain at least two Taxon objects."
+        )
+    if weights and len(taxon_list) != len(weights):
+        raise MajorityVoteError(
+            "The input taxon and weights lists must have the same length."
+        )
+    zipped_taxid_lineage = list(
+        zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
+    )
+    if weights:
+        total_weight = sum(weights)
+        for taxonomic_level in reversed(zipped_taxid_lineage):
+            majority_taxon = defaultdict(float)
+            for taxon, weight in zip(taxonomic_level, weights):
+                majority_taxon[taxon] += weight
+            majority_taxon = sorted(
+                majority_taxon.items(), key=lambda x: x[1], reverse=True
+            )[0]
+            if majority_taxon[0] and majority_taxon[1] > total_weight * fraction:
+                return Taxon(majority_taxon[0], taxdb)
+    else:
+        n_taxa = len(taxon_list)
+        for taxonomic_level in reversed(zipped_taxid_lineage):
+            majority_taxon = Counter(taxonomic_level).most_common()[0]
+            if majority_taxon[0] and majority_taxon[1] > n_taxa * fraction:
+                return Taxon(majority_taxon[0], taxdb)
     return Taxon("1", taxdb)

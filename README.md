@@ -51,6 +51,7 @@ To get information of a given taxon you can create a `Taxon` object using its ta
 
 
 ```python
+saccharomyces = taxopy.Taxon('4930', taxdb)
 human = taxopy.Taxon('9606', taxdb)
 gorilla = taxopy.Taxon('9593', taxdb)
 lagomorpha = taxopy.Taxon('9975', taxdb)
@@ -63,11 +64,13 @@ Each `Taxon` object stores a variety of information, such as the rank, identifie
 print(lagomorpha.rank)
 print(lagomorpha.name)
 print(lagomorpha.name_lineage)
+print(lagomorpha.rank_name_dictionary)
 ```
 
     order
     Lagomorpha
     ['Lagomorpha', 'Glires', 'Euarchontoglires', 'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota', 'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii', 'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata', 'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria', 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota', 'cellular organisms', 'root']
+    {'order': 'Lagomorpha', 'clade': 'Opisthokonta', 'superorder': 'Euarchontoglires', 'class': 'Mammalia', 'superclass': 'Sarcopterygii', 'subphylum': 'Craniata', 'phylum': 'Chordata', 'kingdom': 'Metazoa', 'superkingdom': 'Eukaryota'}
 
 
 You can get the lowest common ancestor of a list of taxa using the `find_lca` function:
@@ -91,7 +94,26 @@ print(majority_vote.name)
 
     Homininae
 
-The `find_majority_vote` allows you to control its stringency via the `fraction` parameter. For instance, if you would set `fraction` to 0.75 the resulting taxon would be shared by more than 75% of the input lineages. By default, `fraction` is 0.5.
+The `find_majority_vote` function allows you to control its stringency via the `fraction` parameter. For instance, if you would set `fraction` to 0.75 the resulting taxon would be shared by more than 75% of the input lineages. By default, `fraction` is 0.5.
+
+```python
+majority_vote = taxopy.find_majority_vote([human, gorilla, lagomorpha], taxdb, fraction=0.75)
+print(majority_vote.name)
+```
+
+    Euarchontoglires
+
+You can also assign weights to each input lineage:
+
+```python
+majority_vote = taxopy.find_majority_vote([saccharomyces, human, gorilla, lagomorpha], taxdb)
+weighted_majority_vote = taxopy.find_majority_vote([saccharomyces, human, gorilla, lagomorpha], taxdb, weights=[3, 1, 1, 1])
+print(majority_vote.name)
+print(weighted_majority_vote.name)
+```
+
+    Euarchontoglires
+    Opisthokonta
 
 ## Acknowledgements
 
