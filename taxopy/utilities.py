@@ -18,12 +18,37 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+import warnings
 from collections import Counter, defaultdict
 from itertools import zip_longest
 from typing import List, Optional
 
 from taxopy.core import TaxDb, Taxon
 from taxopy.exceptions import LCAError, MajorityVoteError
+
+
+def taxid_from_name(name: str, taxdb: TaxDb) -> List[str]:
+    """
+    Takes a taxon name and returns a list containing the taxonomic identifiers
+    associated to it.
+
+    Parameters
+    ----------
+    name : str
+        The name of the taxon whose taxonomic identifier will be returned.
+    taxdb : TaxDb
+        A TaxDb object.
+
+    Returns
+    -------
+    list
+        A list of all the taxonomic identifiers associated with the input taxon
+        name.
+    """
+    taxid_list = [taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name]
+    if not len(taxid_list):
+        warnings.warn("The input name was not found in the taxonomy database.", Warning)
+    return taxid_list
 
 
 def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
@@ -150,9 +175,7 @@ def _weighted_majority_vote(
         majority_taxon = defaultdict(float)
         for taxon, weight in zip(taxonomic_level, weights):
             majority_taxon[taxon] += weight
-        majority_taxon = sorted(
-            majority_taxon.items(), key=lambda x: x[1], reverse=True
-        )
+        majority_taxon = sorted(majority_taxon.items(), key=lambda x: x[1], reverse=True)
         if majority_taxon[0][0] and majority_taxon[0][1] > total_weight * fraction:
             if len(majority_taxon) > 1 and majority_taxon[0][1] > majority_taxon[1][1]:
                 return Taxon(majority_taxon[0][0], taxdb)

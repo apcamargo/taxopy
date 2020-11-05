@@ -19,4 +19,4 @@
 #   Contact: antoniop.camargo@gmail.com
 
 from taxopy.core import TaxDb, Taxon
-from taxopy.utilities import find_lca, find_majority_vote
+from taxopy.utilities import taxid_from_name, find_lca, find_majority_vote

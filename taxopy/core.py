@@ -186,9 +186,7 @@ class Taxon:
     def __init__(self, taxid: str, taxdb: TaxDb):
         self.taxid = taxid
         if self.taxid not in taxdb.taxid2name:
-            raise TaxidError(
-                "The input string is not a valid NCBI taxonomic identifier."
-            )
+            raise TaxidError("The input string is not a valid NCBI taxonomic identifier.")
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)

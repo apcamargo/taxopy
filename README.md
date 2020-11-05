@@ -72,6 +72,7 @@ print(lagomorpha.rank_name_dictionary)
     ['Lagomorpha', 'Glires', 'Euarchontoglires', 'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota', 'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii', 'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata', 'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria', 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota', 'cellular organisms', 'root']
     {'order': 'Lagomorpha', 'clade': 'Opisthokonta', 'superorder': 'Euarchontoglires', 'class': 'Mammalia', 'superclass': 'Sarcopterygii', 'subphylum': 'Craniata', 'phylum': 'Chordata', 'kingdom': 'Metazoa', 'superkingdom': 'Eukaryota'}
 
+### LCA and majority vote
 
 You can get the lowest common ancestor of a list of taxa using the `find_lca` function:
 
@@ -114,6 +115,26 @@ print(weighted_majority_vote.name)
 
     Euarchontoglires
     Opisthokonta
+
+### Taxid from name
+
+If you only have the name of a taxon, you can get its corresponding taxid using the `taxid_from_name` function:
+
+```python
+taxid = taxopy.taxid_from_name('Homininae', taxdb)
+print(taxid)
+```
+
+    ['207598']
+
+This function returns a list of all taxonomic identifiers associated with the input name. In the case of homonyms, the list will contain multiple taxonomic identifiers:
+
+```python
+taxid = taxopy.taxid_from_name('Aotus', taxdb)
+print(taxid)
+```
+
+    ['9504', '114498']
 
 ## Acknowledgements
 
