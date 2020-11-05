@@ -106,36 +106,91 @@ def find_majority_vote(
         raise MajorityVoteError(
             "The input taxon and weights lists must have the same length."
         )
+    if weights:
+        return _weighted_majority_vote(taxon_list, taxdb, fraction, weights)
+    else:
+        return _unweighted_majority_vote(taxon_list, taxdb, fraction)
+    return Taxon("1", taxdb)
+
+
+def _weighted_majority_vote(
+    taxon_list: List[Taxon],
+    taxdb: TaxDb,
+    fraction: float = 0.5,
+    weights: Optional[List[float]] = None,
+) -> Taxon:
+    """
+    Takes a list of multiple Taxon objects and returns the most specific taxon
+    that is shared by more than the chosen fraction of the input lineages.
+
+    Parameters
+    ----------
+    taxon_list : list
+        A list containing at least two Taxon objects.
+    taxdb : TaxDb
+        A TaxDb object.
+    fraction: float, default 0.5
+        The returned taxon will be shared by more than `fraction` of the input
+        taxa lineages. This value must be greater than 0.0 and less than 1.
+    weights: list, optional
+        A list of weights associated with the taxa lineages in `taxon_list`.
+        These values are used to weight the votes of their associated lineages.
+
+    Returns
+    -------
+    Taxon
+        The Taxon object of the most specific taxon that is shared by more than
+        a specified fraction of the input lineages.
+    """
+    total_weight = sum(weights)
     zipped_taxid_lineage = list(
         zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
     )
-    if weights:
-        total_weight = sum(weights)
-        for taxonomic_level in reversed(zipped_taxid_lineage):
-            majority_taxon = defaultdict(float)
-            for taxon, weight in zip(taxonomic_level, weights):
-                majority_taxon[taxon] += weight
-            majority_taxon = sorted(
-                majority_taxon.items(), key=lambda x: x[1], reverse=True
-            )
-            if majority_taxon[0][0] and majority_taxon[0][1] > total_weight * fraction:
-                if (
-                    len(majority_taxon) > 1
-                    and majority_taxon[0][1] > majority_taxon[1][1]
-                ):
-                    return Taxon(majority_taxon[0][0], taxdb)
-                elif len(majority_taxon) == 1:
-                    return Taxon(majority_taxon[0][0], taxdb)
-    else:
-        n_taxa = len(taxon_list)
-        for taxonomic_level in reversed(zipped_taxid_lineage):
-            majority_taxon = Counter(taxonomic_level).most_common()
-            if majority_taxon[0][0] and majority_taxon[0][1] > n_taxa * fraction:
-                if (
-                    len(majority_taxon) > 1
-                    and majority_taxon[0][1] > majority_taxon[1][1]
-                ):
-                    return Taxon(majority_taxon[0][0], taxdb)
-                elif len(majority_taxon) == 1:
-                    return Taxon(majority_taxon[0][0], taxdb)
-    return Taxon("1", taxdb)
+    for taxonomic_level in reversed(zipped_taxid_lineage):
+        majority_taxon = defaultdict(float)
+        for taxon, weight in zip(taxonomic_level, weights):
+            majority_taxon[taxon] += weight
+        majority_taxon = sorted(
+            majority_taxon.items(), key=lambda x: x[1], reverse=True
+        )
+        if majority_taxon[0][0] and majority_taxon[0][1] > total_weight * fraction:
+            if len(majority_taxon) > 1 and majority_taxon[0][1] > majority_taxon[1][1]:
+                return Taxon(majority_taxon[0][0], taxdb)
+            elif len(majority_taxon) == 1:
+                return Taxon(majority_taxon[0][0], taxdb)
+
+
+def _unweighted_majority_vote(
+    taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 0.5
+) -> Taxon:
+    """
+    Takes a list of multiple Taxon objects and returns the most specific taxon
+    that is shared by more than the chosen fraction of the input lineages.
+
+    Parameters
+    ----------
+    taxon_list : list
+        A list containing at least two Taxon objects.
+    taxdb : TaxDb
+        A TaxDb object.
+    fraction: float, default 0.5
+        The returned taxon will be shared by more than `fraction` of the input
+        taxa lineages. This value must be greater than 0.0 and less than 1.
+
+    Returns
+    -------
+    Taxon
+        The Taxon object of the most specific taxon that is shared by more than
+        a specified fraction of the input lineages.
+    """
+    n_taxa = len(taxon_list)
+    zipped_taxid_lineage = list(
+        zip_longest(*[reversed(i.taxid_lineage) for i in taxon_list])
+    )
+    for taxonomic_level in reversed(zipped_taxid_lineage):
+        majority_taxon = Counter(taxonomic_level).most_common()
+        if majority_taxon[0][0] and majority_taxon[0][1] > n_taxa * fraction:
+            if len(majority_taxon) > 1 and majority_taxon[0][1] > majority_taxon[1][1]:
+                return Taxon(majority_taxon[0][0], taxdb)
+            elif len(majority_taxon) == 1:
+                return Taxon(majority_taxon[0][0], taxdb)

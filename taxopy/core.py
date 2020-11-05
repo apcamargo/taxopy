@@ -45,7 +45,6 @@ class TaxDb:
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
         By default, the files are deleted.
 
-
     Attributes
     ----------
     taxid2name : dict
@@ -82,8 +81,8 @@ class TaxDb:
         else:
             self._taxdb_dir = taxdb_dir
         if not (nodes_dmp and names_dmp):
-            nodes_dmp_path = os.path.join(self._taxdb_dir, 'nodes.dmp')
-            names_dmp_path = os.path.join(self._taxdb_dir, 'names.dmp')
+            nodes_dmp_path = os.path.join(self._taxdb_dir, "nodes.dmp")
+            names_dmp_path = os.path.join(self._taxdb_dir, "names.dmp")
             if not (os.path.isfile(nodes_dmp_path) and os.path.isfile(names_dmp_path)):
                 self._nodes_dmp, self._names_dmp = self._download_taxonomy()
             else:
@@ -187,7 +186,9 @@ class Taxon:
     def __init__(self, taxid: str, taxdb: TaxDb):
         self.taxid = taxid
         if self.taxid not in taxdb.taxid2name:
-            raise TaxidError("The input string is not a valid NCBI taxonomic identifier.")
+            raise TaxidError(
+                "The input string is not a valid NCBI taxonomic identifier."
+            )
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
