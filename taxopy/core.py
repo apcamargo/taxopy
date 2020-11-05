@@ -82,7 +82,12 @@ class TaxDb:
         else:
             self._taxdb_dir = taxdb_dir
         if not (nodes_dmp and names_dmp):
-            self._nodes_dmp, self._names_dmp = self._download_taxonomy()
+            nodes_dmp_path = os.path.join(self._taxdb_dir, 'nodes.dmp')
+            names_dmp_path = os.path.join(self._taxdb_dir, 'names.dmp')
+            if not (os.path.isfile(nodes_dmp_path) and os.path.isfile(names_dmp_path)):
+                self._nodes_dmp, self._names_dmp = self._download_taxonomy()
+            else:
+                self._nodes_dmp, self._names_dmp = nodes_dmp_path, names_dmp_path
         else:
             self._nodes_dmp, self._names_dmp = nodes_dmp, names_dmp
         self.taxid2parent, self.taxid2rank = self._import_nodes()
