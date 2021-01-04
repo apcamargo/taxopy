@@ -1,6 +1,6 @@
 # taxopy
 
-A Python package for obtaining complete lineages and the lowest common ancestor (LCA) from a set of taxonomic identifiers.
+A Python package for manipulating NCBI-formatted taxonomic databases. Allows you to obtain complete lineages, determine lowest common ancestors (LCAs), get taxa names from their taxids, and more!
 
 ## Installation
 
