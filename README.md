@@ -37,9 +37,9 @@ The `TaxDb` object stores the name, rank and parent-child relationships of each 
 
 
 ```python
-print(taxdb.taxid2name['2'])
-print(taxdb.taxid2parent['2'])
-print(taxdb.taxid2rank['2'])
+print(taxdb.taxid2name[2])
+print(taxdb.taxid2parent[2])
+print(taxdb.taxid2rank[2])
 ```
 
     Bacteria
@@ -51,10 +51,10 @@ To get information of a given taxon you can create a `Taxon` object using its ta
 
 
 ```python
-saccharomyces = taxopy.Taxon('4930', taxdb)
-human = taxopy.Taxon('9606', taxdb)
-gorilla = taxopy.Taxon('9593', taxdb)
-lagomorpha = taxopy.Taxon('9975', taxdb)
+saccharomyces = taxopy.Taxon(4930, taxdb)
+human = taxopy.Taxon(9606, taxdb)
+gorilla = taxopy.Taxon(9593, taxdb)
+lagomorpha = taxopy.Taxon(9975, taxdb)
 ```
 
 Each `Taxon` object stores a variety of information, such as the rank, identifier and name of the input taxon, and the identifiers and names of all the parent taxa:
@@ -125,7 +125,7 @@ taxid = taxopy.taxid_from_name('Homininae', taxdb)
 print(taxid)
 ```
 
-    ['207598']
+    [207598]
 
 This function returns a list of all taxonomic identifiers associated with the input name. In the case of homonyms, the list will contain multiple taxonomic identifiers:
 
@@ -134,7 +134,7 @@ taxid = taxopy.taxid_from_name('Aotus', taxdb)
 print(taxid)
 ```
 
-    ['9504', '114498']
+    [9504, 114498]
 
 ## Acknowledgements
 

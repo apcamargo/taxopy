@@ -27,7 +27,7 @@ from taxopy.core import TaxDb, Taxon
 from taxopy.exceptions import LCAError, MajorityVoteError
 
 
-def taxid_from_name(name: str, taxdb: TaxDb) -> List[str]:
+def taxid_from_name(name: str, taxdb: TaxDb) -> List[int]:
     """
     Takes a taxon name and returns a list containing the taxonomic identifiers
     associated with it.

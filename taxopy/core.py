@@ -123,8 +123,8 @@ class TaxDb:
         with open(self._nodes_dmp, "r") as f:
             for line in f:
                 line = line.split("\t")
-                taxid = line[0]
-                parent = line[2]
+                taxid = int(line[0])
+                parent = int(line[2])
                 rank = line[4]
                 taxid2parent[taxid] = parent
                 taxid2rank[taxid] = rank
@@ -136,7 +136,7 @@ class TaxDb:
             for line in f:
                 line = line.split("\t")
                 if line[6] == "scientific name":
-                    taxid = line[0]
+                    taxid = int(line[0])
                     name = line[2]
                     taxid2name[taxid] = name
         return taxid2name
@@ -183,10 +183,10 @@ class Taxon:
         If the input string is not a valid NCBI taxonomic identifier.
     """
 
-    def __init__(self, taxid: str, taxdb: TaxDb):
+    def __init__(self, taxid: int, taxdb: TaxDb):
         self.taxid = taxid
         if self.taxid not in taxdb.taxid2name:
-            raise TaxidError("The input string is not a valid NCBI taxonomic identifier.")
+            raise TaxidError("The input integer is not a valid NCBI taxonomic identifier.")
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
