@@ -21,6 +21,7 @@
 import os
 import tarfile
 import urllib.request
+from typing import List
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -208,11 +209,7 @@ class Taxon:
         return lineage
 
     def _convert_to_names(self, taxid2rank, taxid2name):
-        names = []
-        for taxid in self.taxid_lineage:
-            name = taxid2name[taxid]
-            names.append(name)
-        return names
+        return [taxid2name[taxid] for taxid in self.taxid_lineage]
 
     def _convert_to_rank_name_dictionary(self, taxid2rank, taxid2name):
         rank_name_dictionary = {}
@@ -221,3 +218,54 @@ class Taxon:
             if rank != "no rank":
                 rank_name_dictionary[rank] = taxid2name[taxid]
         return rank_name_dictionary
+
+
+class _AggregatedTaxon(Taxon):
+    """
+    Create an object of the _AggregatedTaxon class.
+
+    Parameters
+    ----------
+    taxid : str
+        A NCBI taxonomic identifier.
+    taxdb : TaxDb
+        A TaxDb object.
+    agreement : float
+        Level of agreement of the aggregated taxonomy.
+    aggregated_taxa : list
+        List of the aggregated taxonomic identifiers.
+
+    Attributes
+    ----------
+    taxid : str
+        The NCBI taxonomic identifier the object represents (e.g., '9606').
+    name: str
+        The name of the taxon (e.g., 'Homo sapiens').
+    rank: str
+        The rank of the taxon (e.g., 'species').
+    taxid_lineage: list
+        An ordered list containing the taxonomic identifiers of the whole lineage
+        of the taxon, from the most specific to the most general.
+    name_lineage: list
+        An ordered list containing the names of the whole lineage of the taxon,
+        from the most specific to the most general.
+    rank_name_dictionary: dict
+        A dictionary where the keys are named ranks and the values are the names
+        of the taxa that correspond to each of the named ranks in the lineage.
+    agreement: float
+        Level of agreement of the aggregated taxonomy.
+    aggregated_taxa: list
+        List of the aggregated taxonomic identifiers.
+
+    Raises
+    ------
+    TaxidError
+        If the input string is not a valid NCBI taxonomic identifier.
+    """
+
+    def __init__(
+        self, taxid: int, taxdb: TaxDb, agreement: float, aggregated_taxa: List[int]
+    ):
+        super().__init__(taxid, taxdb)
+        self.agreement = agreement
+        self.aggregated_taxa = aggregated_taxa

@@ -25,7 +25,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="taxopy",
-    version="0.6.0",
+    version="0.7.0",
     packages=find_packages(),
     license="GNU General Public License v3.0",
     description="A Python package for obtaining complete lineages and the lowest common ancestor (LCA) from a set of taxonomic identifiers.",
@@ -37,7 +37,6 @@ setup(
     author="Antonio Pedro Camargo",
     author_email="antoniop.camargo@gmail.com",
     classifiers=[
-        "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
         "Natural Language :: English",
         "Topic :: Software Development :: Libraries",

@@ -23,7 +23,7 @@ from collections import Counter, defaultdict
 from itertools import zip_longest
 from typing import List, Optional
 
-from taxopy.core import TaxDb, Taxon
+from taxopy.core import TaxDb, Taxon, _AggregatedTaxon
 from taxopy.exceptions import LCAError, MajorityVoteError
 
 
@@ -45,7 +45,9 @@ def taxid_from_name(name: str, taxdb: TaxDb) -> List[int]:
         A list of all the taxonomic identifiers associated with the input taxon
         name.
     """
-    taxid_list = [taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name]
+    taxid_list = [
+        taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name
+    ]
     if not len(taxid_list):
         warnings.warn("The input name was not found in the taxonomy database.", Warning)
     return taxid_list
@@ -65,8 +67,8 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
 
     Returns
     -------
-    Taxon
-        The Taxon object of the lowest common ancestor (LCA) of the inputs.
+    _AggregatedTaxon
+        The _AggregatedTaxon object of the lowest common ancestor (LCA) of the inputs.
 
     Raises
     ------
@@ -79,8 +81,9 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     overlap = set.intersection(*map(set, lineage_list))
     for taxid in lineage_list[0]:
         if taxid in overlap:
-            return Taxon(taxid, taxdb)
-    return Taxon("1", taxdb)
+            aggregated_taxa = [taxon.taxid for taxon in taxon_list]
+            return _AggregatedTaxon(taxid, taxdb, 1.0, aggregated_taxa)
+    return _AggregatedTaxon(1, taxdb, 1.0, [])
 
 
 def find_majority_vote(
@@ -108,9 +111,9 @@ def find_majority_vote(
 
     Returns
     -------
-    Taxon
-        The Taxon object of the most specific taxon that is shared by more than
-        a specified fraction of the input lineages.
+    _AggregatedTaxon
+        The _AggregatedTaxon object of the most specific taxon that is shared by
+        more than a specified fraction of the input lineages.
 
     Raises
     ------
@@ -135,7 +138,7 @@ def find_majority_vote(
         return _weighted_majority_vote(taxon_list, taxdb, fraction, weights)
     else:
         return _unweighted_majority_vote(taxon_list, taxdb, fraction)
-    return Taxon("1", taxdb)
+    return _AggregatedTaxon(1, taxdb, 1.0, [])
 
 
 def _weighted_majority_vote(
@@ -163,9 +166,9 @@ def _weighted_majority_vote(
 
     Returns
     -------
-    Taxon
-        The Taxon object of the most specific taxon that is shared by more than
-        a specified fraction of the input lineages.
+    _AggregatedTaxon
+        The _AggregatedTaxon object of the most specific taxon that is shared by
+        more than a specified fraction of the input lineages.
     """
     total_weight = sum(weights)
     zipped_taxid_lineage = list(
@@ -175,12 +178,20 @@ def _weighted_majority_vote(
         majority_taxon = defaultdict(float)
         for taxon, weight in zip(taxonomic_level, weights):
             majority_taxon[taxon] += weight
-        majority_taxon = sorted(majority_taxon.items(), key=lambda x: x[1], reverse=True)
+        majority_taxon = sorted(
+            majority_taxon.items(), key=lambda x: x[1], reverse=True
+        )
         if majority_taxon[0][0] and majority_taxon[0][1] > total_weight * fraction:
+            agreement = majority_taxon[0][1] / total_weight
+            aggregated_taxa = [taxon.taxid for taxon in taxon_list]
             if len(majority_taxon) > 1 and majority_taxon[0][1] > majority_taxon[1][1]:
-                return Taxon(majority_taxon[0][0], taxdb)
+                return _AggregatedTaxon(
+                    majority_taxon[0][0], taxdb, agreement, aggregated_taxa
+                )
             elif len(majority_taxon) == 1:
-                return Taxon(majority_taxon[0][0], taxdb)
+                return _AggregatedTaxon(
+                    majority_taxon[0][0], taxdb, agreement, aggregated_taxa
+                )
 
 
 def _unweighted_majority_vote(
@@ -202,9 +213,9 @@ def _unweighted_majority_vote(
 
     Returns
     -------
-    Taxon
-        The Taxon object of the most specific taxon that is shared by more than
-        a specified fraction of the input lineages.
+    _AggregatedTaxon
+        The _AggregatedTaxon object of the most specific taxon that is shared by
+        more than a specified fraction of the input lineages.
     """
     n_taxa = len(taxon_list)
     zipped_taxid_lineage = list(
@@ -213,7 +224,13 @@ def _unweighted_majority_vote(
     for taxonomic_level in reversed(zipped_taxid_lineage):
         majority_taxon = Counter(taxonomic_level).most_common()
         if majority_taxon[0][0] and majority_taxon[0][1] > n_taxa * fraction:
+            agreement = majority_taxon[0][1] / n_taxa
+            aggregated_taxa = [taxon.taxid for taxon in taxon_list]
             if len(majority_taxon) > 1 and majority_taxon[0][1] > majority_taxon[1][1]:
-                return Taxon(majority_taxon[0][0], taxdb)
+                return _AggregatedTaxon(
+                    majority_taxon[0][0], taxdb, agreement, aggregated_taxa
+                )
             elif len(majority_taxon) == 1:
-                return Taxon(majority_taxon[0][0], taxdb)
+                return _AggregatedTaxon(
+                    majority_taxon[0][0], taxdb, agreement, aggregated_taxa
+                )

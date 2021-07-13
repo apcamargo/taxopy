@@ -116,6 +116,16 @@ print(weighted_majority_vote.name)
     Euarchontoglires
     Opisthokonta
 
+To check the level of agreement between the taxa that were aggregated using `find_majority_vote` and the output taxon, you can check the `agreement` attribute.
+
+```python
+print(majority_vote.agreement)
+print(weighted_majority_vote.agreement)
+```
+
+    0.75
+    1.0
+
 ### Taxid from name
 
 If you only have the name of a taxon, you can get its corresponding taxid using the `taxid_from_name` function:
