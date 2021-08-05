@@ -257,6 +257,9 @@ class _AggregatedTaxon(Taxon):
     name_lineage: list
         An ordered list containing the names of the whole lineage of the taxon,
         from the most specific to the most general.
+    rank_taxid_dictionary: dict
+        A dictionary where the keys are named ranks and the values are the taxids
+        of the taxa that correspond to each of the named ranks in the lineage.
     rank_name_dictionary: dict
         A dictionary where the keys are named ranks and the values are the names
         of the taxa that correspond to each of the named ranks in the lineage.
