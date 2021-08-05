@@ -174,6 +174,9 @@ class Taxon:
     name_lineage: list
         An ordered list containing the names of the whole lineage of the taxon,
         from the most specific to the most general.
+    rank_taxid_dictionary: dict
+        A dictionary where the keys are named ranks and the values are the taxids
+        of the taxa that correspond to each of the named ranks in the lineage.
     rank_name_dictionary: dict
         A dictionary where the keys are named ranks and the values are the names
         of the taxa that correspond to each of the named ranks in the lineage.
@@ -187,14 +190,17 @@ class Taxon:
     def __init__(self, taxid: int, taxdb: TaxDb):
         self.taxid = taxid
         if self.taxid not in taxdb.taxid2name:
-            raise TaxidError("The input integer is not a valid NCBI taxonomic identifier.")
+            raise TaxidError(
+                "The input integer is not a valid NCBI taxonomic identifier."
+            )
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
         self.name_lineage = self._convert_to_names(taxdb.taxid2rank, taxdb.taxid2name)
-        self.rank_name_dictionary = self._convert_to_rank_name_dictionary(
-            taxdb.taxid2rank, taxdb.taxid2name
-        )
+        (
+            self.rank_taxid_dictionary,
+            self.rank_name_dictionary,
+        ) = self._convert_to_rank_dictionary(taxdb.taxid2rank, taxdb.taxid2name)
 
     def __repr__(self):
         return " > ".join(reversed(self.name_lineage))
@@ -211,13 +217,15 @@ class Taxon:
     def _convert_to_names(self, taxid2rank, taxid2name):
         return [taxid2name[taxid] for taxid in self.taxid_lineage]
 
-    def _convert_to_rank_name_dictionary(self, taxid2rank, taxid2name):
+    def _convert_to_rank_dictionary(self, taxid2rank, taxid2name):
+        rank_taxid_dictionary = {}
         rank_name_dictionary = {}
         for taxid in self.taxid_lineage:
             rank = taxid2rank[taxid]
             if rank != "no rank":
+                rank_taxid_dictionary[rank] = taxid
                 rank_name_dictionary[rank] = taxid2name[taxid]
-        return rank_name_dictionary
+        return rank_taxid_dictionary, rank_name_dictionary
 
 
 class _AggregatedTaxon(Taxon):
