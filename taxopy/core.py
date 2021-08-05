@@ -155,7 +155,7 @@ class Taxon:
 
     Parameters
     ----------
-    taxid : str
+    taxid : int
         A NCBI taxonomic identifier.
     taxdb : TaxDb
         A TaxDb object.
@@ -181,7 +181,7 @@ class Taxon:
     Raises
     ------
     TaxidError
-        If the input string is not a valid NCBI taxonomic identifier.
+        If the input integer is not a valid NCBI taxonomic identifier.
     """
 
     def __init__(self, taxid: int, taxdb: TaxDb):
