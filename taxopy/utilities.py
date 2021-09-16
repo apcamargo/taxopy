@@ -48,6 +48,8 @@ def taxid_from_name(name: str, taxdb: TaxDb) -> List[int]:
     taxid_list = [
         taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name
     ]
+    if TaxDb._merged_dmp:
+        taxid_list = [taxid for taxid in taxid_list if taxid not in TaxDb.oldtaxid2newtaxid]
     if not len(taxid_list):
         warnings.warn("The input name was not found in the taxonomy database.", Warning)
     return taxid_list

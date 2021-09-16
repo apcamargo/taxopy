@@ -41,6 +41,8 @@ class TaxDb:
     names_dmp : str, optional
         The path for a pre-downloaded `names.dmp` file. If both `names.dmp` and
         `nodes.dmp` are supplied NCBI's taxonomy database won't be downloaded.
+    merged_dmp : str, optional
+        The path for a pre-downloaded `merged.dmp` file.
     keep_files : bool, default True
         Keep the `nodes.dmp` and `names.dmp` files after the TaxDb object is
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
@@ -57,6 +59,11 @@ class TaxDb:
     taxid2rank: dict
         A dictionary where the keys are taxonomic identifiers and the values are
         their corresponding ranks.
+    oldtaxid2newtaxid: dict
+        A dictionary where the keys are legacy taxonomic identifiers and the
+        values are their corresponding new identifiers. If pre-downloaded
+        `nodes.dmp` and `names.dmp` files were provided but the `merged.dmp`
+        file was not supplied, this attribute will be `None`.
 
     Raises
     ------
@@ -72,6 +79,7 @@ class TaxDb:
         taxdb_dir: str = None,
         nodes_dmp: str = None,
         names_dmp: str = None,
+        merged_dmp: str = None,
         keep_files: bool = False
     ):
         if not taxdb_dir:
@@ -81,17 +89,38 @@ class TaxDb:
             self._taxdb_dir = taxdb_dir
         else:
             self._taxdb_dir = taxdb_dir
+        # If `nodes_dmp` and `names_dmp` were not provided:
         if not (nodes_dmp and names_dmp):
             nodes_dmp_path = os.path.join(self._taxdb_dir, "nodes.dmp")
             names_dmp_path = os.path.join(self._taxdb_dir, "names.dmp")
+            merged_dmp_path = os.path.join(self._taxdb_dir, "merged.dmp")
+            # If the `nodes.dmp` and `names.dmp` files are not in the `taxdb_dir` directory,
+            # download the taxonomy from NCBI:
             if not (os.path.isfile(nodes_dmp_path) and os.path.isfile(names_dmp_path)):
-                self._nodes_dmp, self._names_dmp = self._download_taxonomy()
+                (
+                    self._nodes_dmp,
+                    self._names_dmp,
+                    self._merged_dmp,
+                ) = self._download_taxonomy()
+            # If `nodes.dmp` and `names.dmp` are found in the `taxdb_dir` directory:
             else:
                 self._nodes_dmp, self._names_dmp = nodes_dmp_path, names_dmp_path
+                # If `merged.dmp` is not in the `taxdb_dir` directory, set the `_merged_dmp`
+                # attribute to `None`:
+                self._merged_dmp = (
+                    merged_dmp_path if os.path.isfile(merged_dmp_path) else None
+                )
         else:
             self._nodes_dmp, self._names_dmp = nodes_dmp, names_dmp
+            # If `merged_dmp` was not provided, set the `_merged_dmp` attribute to `None`:
+            self._merged_dmp = None if not merged_dmp else merged_dmp
+        # If a `merged.dmp` file was provided or downloaded, create the oldtaxid2newtaxid
+        # dictionary:
+        self.oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
+        # Create the taxid2parent, taxid2rank, and taxid2name dictionaries:
         self.taxid2parent, self.taxid2rank = self._import_nodes()
         self.taxid2name = self._import_names()
+        # If `keep_files` is set to `False`, delete temporary files:
         if not keep_files:
             self._delete_files()
 
@@ -108,6 +137,7 @@ class TaxDb:
             with tarfile.open(tmp_taxonomy_file) as tf:
                 tf.extract("nodes.dmp", path=self._taxdb_dir)
                 tf.extract("names.dmp", path=self._taxdb_dir)
+                tf.extract("merged.dmp", path=self._taxdb_dir)
         except:
             raise ExtractionError(
                 "Something went wrong while extracting the taxonomy files."
@@ -116,7 +146,18 @@ class TaxDb:
         return (
             os.path.join(self._taxdb_dir, "nodes.dmp"),
             os.path.join(self._taxdb_dir, "names.dmp"),
+            os.path.join(self._taxdb_dir, "merged.dmp"),
         )
+
+    def _import_merged(self):
+        oldtaxid2newtaxid = {}
+        with open(self._merged_dmp, "r") as f:
+            for line in f:
+                line = line.split("\t")
+                taxid = int(line[0])
+                merged = int(line[2])
+                oldtaxid2newtaxid[taxid] = merged
+        return oldtaxid2newtaxid
 
     def _import_nodes(self):
         taxid2parent = {}
@@ -129,6 +170,10 @@ class TaxDb:
                 rank = line[4]
                 taxid2parent[taxid] = parent
                 taxid2rank[taxid] = rank
+        if self._merged_dmp:
+            for oldtaxid, newtaxid in self.oldtaxid2newtaxid.items():
+                taxid2rank[oldtaxid] = taxid2rank[newtaxid]
+                taxid2parent[oldtaxid] = taxid2parent[newtaxid]
         return taxid2parent, taxid2rank
 
     def _import_names(self):
@@ -140,11 +185,16 @@ class TaxDb:
                     taxid = int(line[0])
                     name = line[2]
                     taxid2name[taxid] = name
+        if self._merged_dmp:
+            for oldtaxid, newtaxid in self.oldtaxid2newtaxid.items():
+                taxid2name[oldtaxid] = taxid2name[newtaxid]
         return taxid2name
 
     def _delete_files(self):
         os.remove(self._nodes_dmp)
         os.remove(self._names_dmp)
+        if self._merged_dmp:
+            os.remove(self._merged_dmp)
         if not os.listdir(self._taxdb_dir) and self._taxdb_dir != os.getcwd():
             os.rmdir(self._taxdb_dir)
 
@@ -162,12 +212,15 @@ class Taxon:
 
     Attributes
     ----------
-    taxid : str
-        The NCBI taxonomic identifier the object represents (e.g., '9606').
+    taxid : int
+        The NCBI taxonomic identifier the object represents (e.g., 9606).
     name: str
         The name of the taxon (e.g., 'Homo sapiens').
     rank: str
         The rank of the taxon (e.g., 'species').
+    legacy_taxid: bool
+        A boolean that represents whether the NCBI taxonomic identifier was
+        merged to another identifier (`True`) or not (`False`).
     taxid_lineage: list
         An ordered list containing the taxonomic identifiers of the whole lineage
         of the taxon, from the most specific to the most general.
@@ -195,8 +248,9 @@ class Taxon:
             )
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
+        self.legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
-        self.name_lineage = self._convert_to_names(taxdb.taxid2rank, taxdb.taxid2name)
+        self.name_lineage = self._convert_to_names(taxdb.taxid2name)
         (
             self.rank_taxid_dictionary,
             self.rank_name_dictionary,
@@ -214,7 +268,7 @@ class Taxon:
             lineage.append(current_taxid)
         return lineage
 
-    def _convert_to_names(self, taxid2rank, taxid2name):
+    def _convert_to_names(self, taxid2name):
         return [taxid2name[taxid] for taxid in self.taxid_lineage]
 
     def _convert_to_rank_dictionary(self, taxid2rank, taxid2name):
@@ -234,7 +288,7 @@ class _AggregatedTaxon(Taxon):
 
     Parameters
     ----------
-    taxid : str
+    taxid : int
         A NCBI taxonomic identifier.
     taxdb : TaxDb
         A TaxDb object.
@@ -245,12 +299,15 @@ class _AggregatedTaxon(Taxon):
 
     Attributes
     ----------
-    taxid : str
-        The NCBI taxonomic identifier the object represents (e.g., '9606').
+    taxid : int
+        The NCBI taxonomic identifier the object represents (e.g., 9606).
     name: str
         The name of the taxon (e.g., 'Homo sapiens').
     rank: str
         The rank of the taxon (e.g., 'species').
+    legacy_taxid: bool
+        A boolean that represents whether the NCBI taxonomic identifier was
+        merged to another identifier (`True`) or not (`False`).
     taxid_lineage: list
         An ordered list containing the taxonomic identifiers of the whole lineage
         of the taxon, from the most specific to the most general.
