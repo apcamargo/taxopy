@@ -220,7 +220,9 @@ class Taxon:
         The rank of the taxon (e.g., 'species').
     legacy_taxid: bool
         A boolean that represents whether the NCBI taxonomic identifier was
-        merged to another identifier (`True`) or not (`False`).
+        merged to another identifier (`True`) or not (`False`). If pre-downloaded
+        `nodes.dmp` and `names.dmp` files were provided to build `taxdb` but the
+        `merged.dmp` file was not supplied, this attribute will be `None`.
     taxid_lineage: list
         An ordered list containing the taxonomic identifiers of the whole lineage
         of the taxon, from the most specific to the most general.
@@ -248,7 +250,10 @@ class Taxon:
             )
         self.name = taxdb.taxid2name[self.taxid]
         self.rank = taxdb.taxid2rank[self.taxid]
-        self.legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
+        if taxdb.oldtaxid2newtaxid:
+            self.legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
+        else:
+            self.legacy_taxid = None
         self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
         self.name_lineage = self._convert_to_names(taxdb.taxid2name)
         (
