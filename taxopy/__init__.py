@@ -18,5 +18,13 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+"""
+A Python package for obtaining complete lineages and the lowest common ancestor (LCA) from a set of taxonomic identifiers.
+"""
+
 from taxopy.core import TaxDb, Taxon
 from taxopy.utilities import taxid_from_name, find_lca, find_majority_vote
+
+
+__author__ = "Antonio Camargo"
+__version__ = "0.9.2"
