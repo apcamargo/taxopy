@@ -21,7 +21,7 @@
 import os
 import tarfile
 import urllib.request
-from typing import List
+from typing import Dict, List
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -116,13 +116,29 @@ class TaxDb:
             self._merged_dmp = None if not merged_dmp else merged_dmp
         # If a `merged.dmp` file was provided or downloaded, create the oldtaxid2newtaxid
         # dictionary:
-        self.oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
+        self._oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
         # Create the taxid2parent, taxid2rank, and taxid2name dictionaries:
-        self.taxid2parent, self.taxid2rank = self._import_nodes()
-        self.taxid2name = self._import_names()
+        self._taxid2parent, self._taxid2rank = self._import_nodes()
+        self._taxid2name = self._import_names()
         # If `keep_files` is set to `False`, delete temporary files:
         if not keep_files:
             self._delete_files()
+
+    @property
+    def taxid2name(self) -> Dict[int, str]:
+        return self._taxid2name
+
+    @property
+    def taxid2parent(self) -> Dict[int, int]:
+        return self._taxid2parent
+
+    @property
+    def taxid2rank(self) -> Dict[int, str]:
+        return self._taxid2rank
+
+    @property
+    def oldtaxid2newtaxid(self) -> Dict[int, int]:
+        return self._oldtaxid2newtaxid
 
     def _download_taxonomy(self):
         url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
@@ -171,7 +187,7 @@ class TaxDb:
                 taxid2parent[taxid] = parent
                 taxid2rank[taxid] = rank
         if self._merged_dmp:
-            for oldtaxid, newtaxid in self.oldtaxid2newtaxid.items():
+            for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
                 taxid2rank[oldtaxid] = taxid2rank[newtaxid]
                 taxid2parent[oldtaxid] = taxid2parent[newtaxid]
         return taxid2parent, taxid2rank
@@ -186,7 +202,7 @@ class TaxDb:
                     name = line[2]
                     taxid2name[taxid] = name
         if self._merged_dmp:
-            for oldtaxid, newtaxid in self.oldtaxid2newtaxid.items():
+            for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
                 taxid2name[oldtaxid] = taxid2name[newtaxid]
         return taxid2name
 
@@ -243,31 +259,62 @@ class Taxon:
     """
 
     def __init__(self, taxid: int, taxdb: TaxDb):
-        self.taxid = taxid
+        self._taxid = taxid
         if self.taxid not in taxdb.taxid2name:
             raise TaxidError(
                 "The input integer is not a valid NCBI taxonomic identifier."
             )
-        self.name = taxdb.taxid2name[self.taxid]
-        self.rank = taxdb.taxid2rank[self.taxid]
+        self._name = taxdb.taxid2name[self.taxid]
+        self._rank = taxdb.taxid2rank[self.taxid]
         if taxdb.oldtaxid2newtaxid:
-            self.legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
+            self._legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
         else:
-            self.legacy_taxid = None
-        self.taxid_lineage = self._find_lineage(taxdb.taxid2parent)
-        self.name_lineage = self._convert_to_names(taxdb.taxid2name)
+            self._legacy_taxid = None
+        self._taxid_lineage = self._find_lineage(taxdb.taxid2parent)
+        self._name_lineage = self._convert_to_names(taxdb.taxid2name)
         (
-            self.rank_taxid_dictionary,
-            self.rank_name_dictionary,
+            self._rank_taxid_dictionary,
+            self._rank_name_dictionary,
         ) = self._convert_to_rank_dictionary(taxdb.taxid2rank, taxdb.taxid2name)
+
+    @property
+    def taxid(self) -> int:
+        return self._taxid
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def rank(self) -> str:
+        return self._rank
+
+    @property
+    def legacy_taxid(self) -> bool:
+        return self._legacy_taxid
+
+    @property
+    def taxid_lineage(self) -> List[int]:
+        return self._taxid_lineage
+
+    @property
+    def name_lineage(self) -> List[str]:
+        return self._name_lineage
+
+    @property
+    def rank_taxid_dictionary(self) -> Dict[str, int]:
+        return self._rank_taxid_dictionary
+
+    @property
+    def rank_name_dictionary(self) -> Dict[str, str]:
+        return self._rank_name_dictionary
 
     def __repr__(self):
         return " > ".join(reversed(self.name_lineage))
 
     def _find_lineage(self, taxid2parent):
-        lineage = []
         current_taxid = self.taxid
-        lineage.append(current_taxid)
+        lineage = [current_taxid]
         while taxid2parent[current_taxid] != current_taxid:
             current_taxid = taxid2parent[current_taxid]
             lineage.append(current_taxid)
@@ -340,5 +387,13 @@ class _AggregatedTaxon(Taxon):
         self, taxid: int, taxdb: TaxDb, agreement: float, aggregated_taxa: List[int]
     ):
         super().__init__(taxid, taxdb)
-        self.agreement = agreement
-        self.aggregated_taxa = aggregated_taxa
+        self._agreement = agreement
+        self._aggregated_taxa = aggregated_taxa
+
+    @property
+    def agreement(self) -> float:
+        return self._agreement
+
+    @property
+    def aggregated_taxa(self) -> List[int]:
+        return self._aggregated_taxa
