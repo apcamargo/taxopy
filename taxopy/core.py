@@ -317,7 +317,7 @@ class Taxon:
         return self._rank_name_dictionary
 
     def parent(self, taxdb) -> Taxon:
-        parent_taxid = self.taxid_lineage[1]
+        parent_taxid = taxdb.taxid2parent[self.taxid]
         return Taxon(parent_taxid, taxdb)
 
     def __repr__(self):
