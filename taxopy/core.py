@@ -18,6 +18,8 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+from __future__ import annotations
+
 import os
 import tarfile
 import urllib.request
@@ -252,6 +254,11 @@ class Taxon:
         A dictionary where the keys are named ranks and the values are the names
         of the taxa that correspond to each of the named ranks in the lineage.
 
+    Methods
+    -------
+    parent(taxdb)
+        Returns a Taxon object of the parent node.
+
     Raises
     ------
     TaxidError
@@ -308,6 +315,10 @@ class Taxon:
     @property
     def rank_name_dictionary(self) -> Dict[str, str]:
         return self._rank_name_dictionary
+
+    def parent(self, taxdb) -> Taxon:
+        parent_taxid = self.taxid_lineage[1]
+        return Taxon(parent_taxid, taxdb)
 
     def __repr__(self):
         return " > ".join(reversed(self.name_lineage))
