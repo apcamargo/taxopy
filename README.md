@@ -49,7 +49,7 @@ print(taxdb.taxid2rank[2])
     superkingdom
 
 
-If you want to retrieve the new taxonomic identifier of a legacy identifier you can use the `` attribute:
+If you want to retrieve the new taxonomic identifier of a legacy identifier you can use the `oldtaxid2newtaxid` attribute:
 
 
 ```python
