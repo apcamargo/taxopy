@@ -30,7 +30,7 @@ First you need to download taxonomic information from NCBI's servers and put thi
 ```python
 taxdb = taxopy.TaxDb()
 # You can also use your own set of taxonomy files:
-taxdb = taxopy.TaxDb(nodes_dmp="taxdb/nodes.dmp", names_dmp="taxdb/names.dmp")
+taxdb = taxopy.TaxDb(nodes_dmp="taxdb/nodes.dmp", names_dmp="taxdb/names.dmp", keep_files=True)
 # If you want to support legacy taxonomic identifiers (that were merged to other identifier), you also need to provide a `merged.dmp` file. This is not necessary if the data is being downloaded from NCBI.
 taxdb = taxopy.TaxDb(nodes_dmp="taxdb/nodes.dmp", names_dmp="taxdb/names.dmp", merged_dmp="taxdb/merged.dmp", keep_files=True)
 ```
