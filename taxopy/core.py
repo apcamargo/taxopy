@@ -321,10 +321,11 @@ class Taxon:
         return Taxon(parent_taxid, taxdb)
 
     def __str__(self) -> str:
-        return " > ".join(reversed(self.name_lineage))
+        name_lineage = " > ".join(reversed(self.name_lineage))
+        return f"{self.taxid}: {name_lineage}"
 
     def __repr__(self) -> str:
-        return " > ".join(reversed(self.name_lineage))
+        return str(self)
 
     def _find_lineage(self, taxid2parent):
         current_taxid = self.taxid
