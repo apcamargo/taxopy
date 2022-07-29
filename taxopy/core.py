@@ -49,7 +49,8 @@ class TaxDb:
     keep_files : bool, default False
         Keep the `nodes.dmp` and `names.dmp` files after the TaxDb object is
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
-        By default, the files are deleted.
+        By default the files are deleted, unless `nodes_dmp` and `names_dmp`
+        were manually supplied.
 
     Attributes
     ----------
@@ -93,19 +94,18 @@ class TaxDb:
         else:
             self._taxdb_dir = taxdb_dir
         # If `nodes_dmp` and `names_dmp` were not provided:
-        if not (nodes_dmp and names_dmp):
+        if not nodes_dmp or not names_dmp:
             nodes_dmp_path = os.path.join(self._taxdb_dir, "nodes.dmp")
             names_dmp_path = os.path.join(self._taxdb_dir, "names.dmp")
             merged_dmp_path = os.path.join(self._taxdb_dir, "merged.dmp")
             # If the `nodes.dmp` and `names.dmp` files are not in the `taxdb_dir` directory,
             # download the taxonomy from NCBI:
-            if not (os.path.isfile(nodes_dmp_path) and os.path.isfile(names_dmp_path)):
+            if not os.path.isfile(nodes_dmp_path) or not os.path.isfile(names_dmp_path):
                 (
                     self._nodes_dmp,
                     self._names_dmp,
                     self._merged_dmp,
                 ) = self._download_taxonomy()
-            # If `nodes.dmp` and `names.dmp` are found in the `taxdb_dir` directory:
             else:
                 self._nodes_dmp, self._names_dmp = nodes_dmp_path, names_dmp_path
                 # If `merged.dmp` is not in the `taxdb_dir` directory, set the `_merged_dmp`
@@ -116,15 +116,16 @@ class TaxDb:
         else:
             self._nodes_dmp, self._names_dmp = nodes_dmp, names_dmp
             # If `merged_dmp` was not provided, set the `_merged_dmp` attribute to `None`:
-            self._merged_dmp = None if not merged_dmp else merged_dmp
+            self._merged_dmp = merged_dmp or None
         # If a `merged.dmp` file was provided or downloaded, create the oldtaxid2newtaxid
         # dictionary:
         self._oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
         # Create the taxid2parent, taxid2rank, and taxid2name dictionaries:
         self._taxid2parent, self._taxid2rank = self._import_nodes()
         self._taxid2name = self._import_names()
-        # If `keep_files` is set to `False`, delete temporary files:
-        if not keep_files:
+        # Delete temporary files if `keep_files` is set to `False`, unless
+        # `nodes_dmp` and `names_dmp` were manually supplied:
+        if not keep_files and (not nodes_dmp or not names_dmp):
             self._delete_files()
 
     @property
