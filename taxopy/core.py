@@ -45,7 +45,7 @@ class TaxDb:
         `nodes.dmp` are supplied NCBI's taxonomy database won't be downloaded.
     merged_dmp : str, optional
         The path for a pre-downloaded `merged.dmp` file.
-    keep_files : bool, default True
+    keep_files : bool, default False
         Keep the `nodes.dmp` and `names.dmp` files after the TaxDb object is
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
         By default, the files are deleted.
