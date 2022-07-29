@@ -27,4 +27,4 @@ from taxopy.utilities import taxid_from_name, find_lca, find_majority_vote
 
 
 __author__ = "Antonio Camargo"
-__version__ = "0.9.2"
+__version__ = "0.10.0"
