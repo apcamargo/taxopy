@@ -23,6 +23,7 @@ from __future__ import annotations
 import os
 import tarfile
 import urllib.request
+from collections import OrderedDict
 from typing import Dict, List
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
@@ -82,7 +83,7 @@ class TaxDb:
         nodes_dmp: str = None,
         names_dmp: str = None,
         merged_dmp: str = None,
-        keep_files: bool = False
+        keep_files: bool = False,
     ):
         if not taxdb_dir:
             self._taxdb_dir = os.getcwd()
@@ -321,8 +322,10 @@ class Taxon:
         return Taxon(parent_taxid, taxdb)
 
     def __str__(self) -> str:
-        name_lineage = " > ".join(reversed(self.name_lineage))
-        return f"{self.taxid}: {name_lineage}"
+        lineage = [
+            f"{rank[0]}__{name}" for rank, name in self.rank_name_dictionary.items()
+        ]
+        return ";".join(reversed(lineage))
 
     def __repr__(self) -> str:
         return str(self)
@@ -339,8 +342,8 @@ class Taxon:
         return [taxid2name[taxid] for taxid in self.taxid_lineage]
 
     def _convert_to_rank_dictionary(self, taxid2rank, taxid2name):
-        rank_taxid_dictionary = {}
-        rank_name_dictionary = {}
+        rank_taxid_dictionary = OrderedDict()
+        rank_name_dictionary = OrderedDict()
         for taxid in self.taxid_lineage:
             rank = taxid2rank[taxid]
             if rank != "no rank":
