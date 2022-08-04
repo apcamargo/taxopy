@@ -322,15 +322,6 @@ class Taxon:
         parent_taxid = taxdb.taxid2parent[self.taxid]
         return Taxon(parent_taxid, taxdb)
 
-    def __str__(self) -> str:
-        lineage = [
-            f"{rank[0]}__{name}" for rank, name in self.rank_name_dictionary.items()
-        ]
-        return ";".join(reversed(lineage))
-
-    def __repr__(self) -> str:
-        return str(self)
-
     def _find_lineage(self, taxid2parent):
         current_taxid = self.taxid
         lineage = [current_taxid]
@@ -351,6 +342,20 @@ class Taxon:
                 rank_taxid_dictionary[rank] = taxid
                 rank_name_dictionary[rank] = taxid2name[taxid]
         return rank_taxid_dictionary, rank_name_dictionary
+
+    def __str__(self) -> str:
+        lineage = [
+            f"{rank[0]}__{name}" for rank, name in self.rank_name_dictionary.items()
+        ]
+        return ";".join(reversed(lineage))
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __eq__(self, other: object) -> bool:
+        if other.__class__ is not self.__class__:
+            return NotImplemented
+        return self.taxid_lineage == other.taxid_lineage
 
 
 class _AggregatedTaxon(Taxon):

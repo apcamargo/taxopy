@@ -26,7 +26,6 @@ import taxopy
 
 First you need to download taxonomic information from NCBI's servers and put this data into a `TaxDb` object:
 
-
 ```python
 taxdb = taxopy.TaxDb()
 # You can also use your own set of taxonomy files:
@@ -36,7 +35,6 @@ taxdb = taxopy.TaxDb(nodes_dmp="taxdb/nodes.dmp", names_dmp="taxdb/names.dmp", m
 ```
 
 The `TaxDb` object stores the name, rank and parent-child relationships of each taxonomic identifier:
-
 
 ```python
 print(taxdb.taxid2name[2])
@@ -48,9 +46,7 @@ print(taxdb.taxid2rank[2])
     131567
     superkingdom
 
-
 If you want to retrieve the new taxonomic identifier of a legacy identifier you can use the `oldtaxid2newtaxid` attribute:
-
 
 ```python
 print(taxdb.oldtaxid2newtaxid[260])
@@ -58,9 +54,7 @@ print(taxdb.oldtaxid2newtaxid[260])
 
     143224
 
-
 To get information of a given taxon you can create a `Taxon` object using its taxonomic identifier:
-
 
 ```python
 saccharomyces = taxopy.Taxon(4930, taxdb)
@@ -70,7 +64,6 @@ lagomorpha = taxopy.Taxon(9975, taxdb)
 ```
 
 Each `Taxon` object stores a variety of information, such as the rank, identifier and name of the input taxon, and the identifiers and names of all the parent taxa:
-
 
 ```python
 print(lagomorpha.rank)
@@ -99,7 +92,6 @@ print(lagomorpha_parent.name)
 
 You can get the lowest common ancestor of a list of taxa using the `find_lca` function:
 
-
 ```python
 human_lagomorpha_lca = taxopy.find_lca([human, lagomorpha], taxdb)
 print(human_lagomorpha_lca.name)
@@ -107,9 +99,7 @@ print(human_lagomorpha_lca.name)
 
     Euarchontoglires
 
-
 You may also use the `find_majority_vote` to discover the most specific taxon that is shared by more than half of the lineages of a list of taxa:
-
 
 ```python
 majority_vote = taxopy.find_majority_vote([human, gorilla, lagomorpha], taxdb)
