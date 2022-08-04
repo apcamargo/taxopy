@@ -84,6 +84,17 @@ print(lagomorpha.rank_name_dictionary)
     ['Lagomorpha', 'Glires', 'Euarchontoglires', 'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota', 'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii', 'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata', 'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria', 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota', 'cellular organisms', 'root']
     {'order': 'Lagomorpha', 'clade': 'Opisthokonta', 'superorder': 'Euarchontoglires', 'class': 'Mammalia', 'superclass': 'Sarcopterygii', 'subphylum': 'Craniata', 'phylum': 'Chordata', 'kingdom': 'Metazoa', 'superkingdom': 'Eukaryota'}
 
+You can use the `parent` method to get a `Taxon` object of the parent node of a given taxon:
+
+```python
+lagomorpha_parent = lagomorpha.parent(taxdb)
+print(lagomorpha_parent.rank)
+print(lagomorpha_parent.name)
+```
+
+    clade
+    Glires
+
 ### LCA and majority vote
 
 You can get the lowest common ancestor of a list of taxa using the `find_lca` function:
