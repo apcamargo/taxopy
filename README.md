@@ -1,5 +1,7 @@
 # taxopy
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6993581.svg)](https://doi.org/10.5281/zenodo.6993581)
+
 A Python package for manipulating NCBI-formatted taxonomic databases. Allows you to obtain complete lineages, determine lowest common ancestors (LCAs), get taxa names from their taxids, and more!
 
 ## Installation
