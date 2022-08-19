@@ -357,6 +357,9 @@ class Taxon:
             return NotImplemented
         return self.taxid_lineage == other.taxid_lineage
 
+    def __hash__(self) -> int:
+        return hash(self.taxid)
+
 
 class _AggregatedTaxon(Taxon):
     """
