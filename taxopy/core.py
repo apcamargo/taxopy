@@ -187,7 +187,7 @@ class TaxDb:
                 line = line.split("\t")
                 taxid = int(line[0])
                 parent = int(line[2])
-                rank = line[4]
+                rank = line[4].strip()
                 taxid2parent[taxid] = parent
                 taxid2rank[taxid] = rank
         if self._merged_dmp:
@@ -203,7 +203,7 @@ class TaxDb:
                 line = line.split("\t")
                 if line[6] == "scientific name":
                     taxid = int(line[0])
-                    name = line[2]
+                    name = line[2].strip()
                     taxid2name[taxid] = name
         if self._merged_dmp:
             for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
