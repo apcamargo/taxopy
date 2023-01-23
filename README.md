@@ -161,6 +161,15 @@ print(taxid)
 
     [9504, 114498]
 
+In case a list of names is provided as input, the function will return a list of lists.
+
+```python
+taxid = taxopy.taxid_from_name(['Homininae', 'Aotus'], taxdb)
+print(taxid)
+```
+
+    [[207598], [9504, 114498]]
+
 ## Acknowledgements
 
 Some of the code used in taxopy was taken from the [CAT/BAT tool for taxonomic classification of contigs and metagenome-assembled genomes](https://github.com/dutilh/CAT).

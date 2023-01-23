@@ -21,37 +21,56 @@
 import warnings
 from collections import Counter, defaultdict
 from itertools import zip_longest
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from taxopy.core import TaxDb, Taxon, _AggregatedTaxon
 from taxopy.exceptions import LCAError, MajorityVoteError
 
 
-def taxid_from_name(name: str, taxdb: TaxDb) -> List[int]:
+def taxid_from_name(
+    names: Union[str, List[str]], taxdb: TaxDb
+) -> Union[List[int], List[List[int]]]:
     """
-    Takes a taxon name and returns a list containing the taxonomic identifiers
-    associated with it.
+    Takes one (or more) taxon name and returns a list (or list of lists)
+    containing the taxonomic identifiers associated with it (or them).
 
     Parameters
     ----------
-    name : str
-        The name of the taxon whose taxonomic identifier will be returned.
+    name : str or list of str
+        The name of the taxon whose taxonomic identifier will be returned. A
+        list of names can also be provided.
     taxdb : TaxDb
         A TaxDb object.
 
     Returns
     -------
-    list
+    list or list of list
         A list of all the taxonomic identifiers associated with the input taxon
-        name.
+        name. If a list of names is provided, a list of lists is returned.
     """
-    taxid_list = [
-        taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name
-    ]
-    if taxdb._merged_dmp:
-        taxid_list = [taxid for taxid in taxid_list if taxid not in taxdb.oldtaxid2newtaxid]
-    if not len(taxid_list):
-        warnings.warn("The input name was not found in the taxonomy database.", Warning)
+    if isinstance(names, list):
+        name2taxid = defaultdict(list)
+        for taxid, taxname in taxdb.taxid2name.items():
+            if not taxdb._merged_dmp or taxid not in taxdb.oldtaxid2newtaxid:
+                name2taxid[taxname].append(taxid)
+        taxid_list = [name2taxid[name] for name in names]
+        if not all(len(taxids) for taxids in taxid_list):
+            warnings.warn(
+                "At least one of the input names was found in the taxonomy database.",
+                Warning,
+            )
+    else:
+        taxid_list = [
+            taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == names
+        ]
+        if taxdb._merged_dmp:
+            taxid_list = [
+                taxid for taxid in taxid_list if taxid not in taxdb.oldtaxid2newtaxid
+            ]
+        if not len(taxid_list):
+            warnings.warn(
+                "The input name was not found in the taxonomy database.", Warning
+            )
     return taxid_list
 
 
