@@ -24,7 +24,7 @@ import os
 import tarfile
 import urllib.request
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -249,6 +249,17 @@ class Taxon:
     name_lineage: list
         An ordered list containing the names of the whole lineage of the taxon,
         from the most specific to the most general.
+    rank_lineage: list
+        An ordered list containing the rank names of the whole lineage of the
+        taxon, from the most specific to the most general.
+    ranked_name_lineage : list
+        An ordered list of tuples, where each tuple represents a rank in the
+        lineage, with the first element denoting the rank name and the second
+        indicating the taxon's name.
+    ranked_taxid_lineage : list
+        An ordered list of tuples, where each tuple represents a rank in the
+        lineage, with the first element denoting the rank name and the second
+        indicating the taxon's taxonomic identifier.
     rank_taxid_dictionary: dict
         A dictionary where the keys are named ranks and the values are the taxids
         of the taxa that correspond to each of the named ranks in the lineage.
@@ -281,6 +292,7 @@ class Taxon:
             self._legacy_taxid = None
         self._taxid_lineage = self._find_lineage(taxdb.taxid2parent)
         self._name_lineage = self._convert_to_names(taxdb.taxid2name)
+        self._rank_lineage = [taxdb._taxid2rank[taxid] for taxid in self.taxid_lineage]
         (
             self._rank_taxid_dictionary,
             self._rank_name_dictionary,
@@ -309,6 +321,18 @@ class Taxon:
     @property
     def name_lineage(self) -> List[str]:
         return self._name_lineage
+
+    @property
+    def rank_lineage(self) -> List[str]:
+        return self._rank_lineage
+
+    @property
+    def ranked_taxid_lineage(self) -> List[Tuple[str, int]]:
+        return list(zip(self.rank_lineage, self.taxid_lineage))
+
+    @property
+    def ranked_name_lineage(self) -> List[Tuple[str, str]]:
+        return list(zip(self.rank_lineage, self.name_lineage))
 
     @property
     def rank_taxid_dictionary(self) -> Dict[str, int]:
@@ -393,6 +417,17 @@ class _AggregatedTaxon(Taxon):
     name_lineage: list
         An ordered list containing the names of the whole lineage of the taxon,
         from the most specific to the most general.
+    rank_lineage: list
+        An ordered list containing the rank names of the whole lineage of the
+        taxon, from the most specific to the most general.
+    ranked_name_lineage : list
+        An ordered list of tuples, where each tuple represents a rank in the
+        lineage, with the first element denoting the rank name and the second
+        indicating the taxon's name.
+    ranked_taxid_lineage : list
+        An ordered list of tuples, where each tuple represents a rank in the
+        lineage, with the first element denoting the rank name and the second
+        indicating the taxon's taxonomic identifier.
     rank_taxid_dictionary: dict
         A dictionary where the keys are named ranks and the values are the taxids
         of the taxa that correspond to each of the named ranks in the lineage.
