@@ -23,8 +23,7 @@ A Python package for obtaining complete lineages and the lowest common ancestor 
 """
 
 from taxopy.core import TaxDb, Taxon
-from taxopy.utilities import taxid_from_name, find_lca, find_majority_vote
-
+from taxopy.utilities import find_lca, find_majority_vote, taxid_from_name
 
 __author__ = "Antonio Camargo"
 __version__ = "0.12.0"

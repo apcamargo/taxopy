@@ -20,5 +20,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 
+[project.optional-dependencies]
+fuzzy-matching = ["rapidfuzz"]
+
 [project.urls]
 Home = "https://github.com/apcamargo/taxopy"

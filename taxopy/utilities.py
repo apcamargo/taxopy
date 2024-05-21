@@ -18,6 +18,8 @@
 #
 #   Contact: antoniop.camargo@gmail.com
 
+import importlib
+import types
 import warnings
 from collections import Counter, defaultdict
 from itertools import zip_longest
@@ -27,8 +29,89 @@ from taxopy.core import TaxDb, Taxon, _AggregatedTaxon
 from taxopy.exceptions import LCAError, MajorityVoteError
 
 
+def _import_optional_dependency(name: str) -> types.ModuleType:
+    """
+    Import an optional dependency.
+
+    Parameters
+    ----------
+    name : str
+        The module name.
+
+    Returns
+    -------
+    maybe_module : types.ModuleType
+        The imported module.
+    """
+
+    msg = f"Missing optional dependency '{name}'. Use pip or conda to install {name}."
+    try:
+        module = importlib.import_module(name)
+    except ImportError as err:
+        raise ImportError(msg) from err
+    return module
+
+
+def _get_taxid_from_multiple_names(names, taxdb, fuzzy, score_cutoff):
+    name2taxid = defaultdict(list)
+    for taxid, taxname in taxdb.taxid2name.items():
+        if not taxdb._merged_dmp or taxid not in taxdb.oldtaxid2newtaxid:
+            name2taxid[taxname].append(taxid)
+    if fuzzy:
+        rapidfuzz = _import_optional_dependency("rapidfuzz")
+        taxid_list = [
+            [
+                taxid
+                for match, _, _ in rapidfuzz.process.extract(
+                    name,
+                    name2taxid.keys(),
+                    scorer=rapidfuzz.fuzz.ratio,
+                    processor=rapidfuzz.utils.default_process,
+                    score_cutoff=score_cutoff,
+                    limit=None,
+                )
+                for taxid in name2taxid[match]
+            ]
+            for name in names
+        ]
+    else:
+        taxid_list = [name2taxid[name] for name in names]
+    return taxid_list
+
+
+def _get_taxid_from_single_name(name, taxdb, fuzzy, score_cutoff):
+    if fuzzy:
+        rapidfuzz = _import_optional_dependency("rapidfuzz")
+        matches = {
+            match
+            for match, _, _ in rapidfuzz.process.extract(
+                name,
+                taxdb.taxid2name.values(),
+                scorer=rapidfuzz.fuzz.ratio,
+                processor=rapidfuzz.utils.default_process,
+                score_cutoff=score_cutoff,
+                limit=None,
+            )
+        }
+        taxid_list = [
+            taxid for taxid, taxname in taxdb.taxid2name.items() if taxname in matches
+        ]
+    else:
+        taxid_list = [
+            taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == name
+        ]
+    if taxdb._merged_dmp:
+        taxid_list = [
+            taxid for taxid in taxid_list if taxid not in taxdb.oldtaxid2newtaxid
+        ]
+    return taxid_list
+
+
 def taxid_from_name(
-    names: Union[str, List[str]], taxdb: TaxDb
+    names: Union[str, List[str]],
+    taxdb: TaxDb,
+    fuzzy: bool = False,
+    score_cutoff: float = 0.9,
 ) -> Union[List[int], List[List[int]]]:
     """
     Takes one (or more) taxon name and returns a list (or list of lists)
@@ -41,6 +124,12 @@ def taxid_from_name(
         list of names can also be provided.
     taxdb : TaxDb
         A TaxDb object.
+    fuzzy : bool, default False
+        If True, the input name will be matched to the taxa names in the
+        database using fuzzy string matching.
+    score_cutoff : float, default 0.9
+        The minimum score required for a match to be considered valid when
+        fuzzy string matching is used. This value must be between 0.0 and 1.0.
 
     Returns
     -------
@@ -48,25 +137,16 @@ def taxid_from_name(
         A list of all the taxonomic identifiers associated with the input taxon
         name. If a list of names is provided, a list of lists is returned.
     """
+    score_cutoff = score_cutoff * 100
     if isinstance(names, list):
-        name2taxid = defaultdict(list)
-        for taxid, taxname in taxdb.taxid2name.items():
-            if not taxdb._merged_dmp or taxid not in taxdb.oldtaxid2newtaxid:
-                name2taxid[taxname].append(taxid)
-        taxid_list = [name2taxid[name] for name in names]
+        taxid_list = _get_taxid_from_multiple_names(names, taxdb, fuzzy, score_cutoff)
         if not all(len(taxids) for taxids in taxid_list):
             warnings.warn(
-                "At least one of the input names was found in the taxonomy database.",
+                "At least one of the input names was not found in the taxonomy database.",
                 Warning,
             )
     else:
-        taxid_list = [
-            taxid for taxid, taxname in taxdb.taxid2name.items() if taxname == names
-        ]
-        if taxdb._merged_dmp:
-            taxid_list = [
-                taxid for taxid in taxid_list if taxid not in taxdb.oldtaxid2newtaxid
-            ]
+        taxid_list = _get_taxid_from_single_name(names, taxdb, fuzzy, score_cutoff)
         if not len(taxid_list):
             warnings.warn(
                 "The input name was not found in the taxonomy database.", Warning
@@ -125,7 +205,7 @@ def find_majority_vote(
         A TaxDb object.
     fraction: float, default 0.5
         The returned taxon will be shared by more than `fraction` of the input
-        taxa lineages. This value must be greater than 0.0 and less than 1.
+        taxa lineages. This value must be greater than 0.0 and less than 1.0.
     weights: list, optional
         A list of weights associated with the taxa lineages in `taxon_list`.
         These values are used to weight the votes of their associated lineages.
