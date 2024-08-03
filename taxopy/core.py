@@ -360,6 +360,14 @@ class Taxon:
         return self._rank_name_dictionary
 
     def parent(self, taxdb) -> Taxon:
+        """
+        Returns the parent node of the taxon.
+
+        Returns
+        -------
+        Taxon
+            The Taxon object of the parent node.
+        """
         parent_taxid = taxdb.taxid2parent[self.taxid]
         return Taxon(parent_taxid, taxdb)
 

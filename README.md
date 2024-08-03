@@ -1,12 +1,14 @@
-# taxopy
+<h1 align="center">taxopy</h1>
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6993581.svg)](https://doi.org/10.5281/zenodo.6993581)
+<p align="center">
+  <a href="https://apcamargo.github.io/taxopy"><b>Documentation</b></a> | <a href="https://doi.org/10.5281/zenodo.6993580"><b>DOI</b></a>
+</p>
 
-A Python package for manipulating NCBI-formatted taxonomic databases. Allows you to obtain complete lineages, determine lowest common ancestors (LCAs), get taxa names from their taxids, and more!
+`taxopy` is a Python package that provides an interface to NCBI-formatted taxonomic databases. It enables various operations on taxonomic data, such as obtaining complete lineages, determining the lowest common ancestors (LCAs), retrieving taxa names from taxonomic identifiers, and more.
 
 ## Installation
 
-There are two ways to install taxopy:
+There are two ways to install `taxopy`:
 
   - Using pip:
 
@@ -21,11 +23,11 @@ conda install -c conda-forge -c bioconda taxopy
 ```
 
 > [!NOTE]
-> To enable fuzzy matching of taxonomic names, you need to install the `fuzzy-matching` extra. This can be done by adding `[fuzzy-matching]` to the installation command in pip:
+> `taxopy` supports fuzzy string matching to [search for taxa with names that are similar but not identical to the queries](https://apcamargo.github.io/taxopy/guide/#retrieval-of-taxa-with-nearly-matching-names-though-fuzzy-search). This feature is not enabled by default to avoid additional dependencies. However, you can enable it by installing the `fuzzy-matching` extra using `pip`:
 > ```
 > pip install taxopy[fuzzy-matching]
 > ```
-> Alternatively, you can install the `rapidfuzz` library:
+> Alternatively, you can install the [`rapidfuzz`](https://rapidfuzz.github.io/RapidFuzz) library alongside `taxopy`:
 > ```
 > # Using pip
 > pip install rapidfuzz
@@ -34,6 +36,8 @@ conda install -c conda-forge -c bioconda taxopy
 > ```
 
 ## Usage
+
+For a detailed guide on how to use `taxopy`, please refer to the [documentation](https://apcamargo.github.io/taxopy).
 
 ```python
 import taxopy
@@ -185,7 +189,9 @@ print(taxid)
 
     [[207598], [9504, 114498]]
 
-In certain situations, it is useful to allow slight variations between the input name and the matches in the database. This can be accomplished by setting the `fuzzy` parameter of `taxid_from_name` to `True`. For instance, in GTDB, some taxa have suffixes. The `fuzzy` parameter enables you to locate the taxonomic identifiers of all taxa with a name similar to the input, so you don't need to know the exact name beforehand.
+When querying a `TaxDb` using a taxon name, you can enable fuzzy search by setting the `fuzzy` parameter of [`taxid_from_name`][taxopy.taxid_from_name] to `True`. This allows the function to find taxa with names similar, but not identical, to the query string(s).
+
+For a practical use case of this feature, consider the [GTDB](https://gtdb.ecogenomic.org/) taxonomy. In GTDB [some taxa have suffixes appended to their names](https://gtdb.ecogenomic.org/faq#why-do-some-family-and-higher-rank-names-end-with-an-alphabetic-suffix) because they are either not monophyletic in the GTDB reference tree or have unstable placements between different releases. By using fuzzy searches, you can find all the taxonomic identifiers representing a given taxon, such as *Myxococcota*, without needing to know in advance if any suffixes are appended to the name.
 
 ```python
 # The `taxdump_url` parameter of the `TaxDb` class can be used retrieve a custom taxdump from a URL. In this case, we will use a GTDB taxdump provided by Wei Shen (https://github.com/shenwei356/gtdb-taxdump)
@@ -197,7 +203,7 @@ for t in taxopy.taxid_from_name("Myxococcota", gtdb_taxdb, fuzzy=True):
     Myxococcota_A
     Myxococcota
 
-You can control the minimum similarity between the input name and the matches in the database by setting the `score_cutoff` parameter (default is 0.9).
+You can adjust the minimum similarity threshold between the query string(s) and the matches in the database using the `score_cutoff` parameter, which determines how closely a name must match a query string to be considered a valid result. The default value is `0.9`, but you can lower this threshold to find matches that are less similar to the queries.
 
 ```python
 for t in taxopy.taxid_from_name(

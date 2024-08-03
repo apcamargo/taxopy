@@ -1,0 +1,14 @@
+/*  Header shadow */
+.md-header--shadow {
+    box-shadow: none;
+}
+
+/* Title */
+.md-header__topic:first-child {
+    font-family: var(--md-code-font-family);
+}
+
+/* Figure caption */
+figcaption {
+    font-size: 0.68rem;
+}

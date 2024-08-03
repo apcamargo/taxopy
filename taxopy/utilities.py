@@ -119,7 +119,7 @@ def taxid_from_name(
 
     Parameters
     ----------
-    name : str or list of str
+    names : str or list of str
         The name of the taxon whose taxonomic identifier will be returned. A
         list of names can also be provided.
     taxdb : TaxDb
