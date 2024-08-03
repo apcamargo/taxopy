@@ -46,6 +46,9 @@ class TaxDb:
         `nodes.dmp` are supplied NCBI's taxonomy database won't be downloaded.
     merged_dmp : str, optional
         The path for a pre-downloaded `merged.dmp` file.
+    taxdump_url : str, optional
+        The URL of the taxdump file (in .tar.gz) to be downloaded. By default,
+        the latest version of NCBI's taxdump will be fetched.
     keep_files : bool, default False
         Keep the `nodes.dmp` and `names.dmp` files after the TaxDb object is
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
@@ -81,6 +84,7 @@ class TaxDb:
         self,
         *,
         taxdb_dir: str = None,
+        taxdump_url: str = None,
         nodes_dmp: str = None,
         names_dmp: str = None,
         merged_dmp: str = None,
@@ -105,7 +109,7 @@ class TaxDb:
                     self._nodes_dmp,
                     self._names_dmp,
                     self._merged_dmp,
-                ) = self._download_taxonomy()
+                ) = self._download_taxonomy(taxdump_url)
             else:
                 self._nodes_dmp, self._names_dmp = nodes_dmp_path, names_dmp_path
                 # If `merged.dmp` is not in the `taxdb_dir` directory, set the `_merged_dmp`
@@ -144,20 +148,33 @@ class TaxDb:
     def oldtaxid2newtaxid(self) -> Dict[int, int]:
         return self._oldtaxid2newtaxid
 
-    def _download_taxonomy(self):
-        url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+    def _download_taxonomy(self, url: str = None):
+        if not url:
+            url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
         tmp_taxonomy_file = os.path.join(self._taxdb_dir, "taxdump.tar.gz")
         try:
             urllib.request.urlretrieve(url, tmp_taxonomy_file)
         except:
             raise DownloadError(
-                "Download of taxonomy files failed. NCBI's server may be offline."
+                "Download of taxonomy files failed. The server may be offline."
             )
         try:
+            nodes_dmp, names_dmp, merged_dmp = None, None, None
             with tarfile.open(tmp_taxonomy_file) as tf:
-                tf.extract("nodes.dmp", path=self._taxdb_dir)
-                tf.extract("names.dmp", path=self._taxdb_dir)
-                tf.extract("merged.dmp", path=self._taxdb_dir)
+                for member in tf.getmembers():
+                    if os.path.basename(member.name) == "nodes.dmp" and member.isfile():
+                        nodes_dmp = ("nodes.dmp", tf.extractfile(member))
+                    elif os.path.basename(member.name) == "names.dmp" and member.isfile():
+                        names_dmp = ("names.dmp", tf.extractfile(member))
+                    elif os.path.basename(member.name) == "merged.dmp" and member.isfile():
+                        merged_dmp = ("merged.dmp", tf.extractfile(member))
+                for p, m in [nodes_dmp, names_dmp, merged_dmp]:
+                    with open(os.path.join(self._taxdb_dir, p), "wb") as fo:
+                        while True:
+                            chunk = m.read(1024)
+                            if not chunk:
+                                break
+                            fo.write(chunk)
         except:
             raise ExtractionError(
                 "Something went wrong while extracting the taxonomy files."
