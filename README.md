@@ -20,6 +20,19 @@ pip install taxopy
 conda install -c conda-forge -c bioconda taxopy
 ```
 
+> [!NOTE]
+> To enable fuzzy matching of taxonomic names, you need to install the `fuzzy-matching` extra. This can be done by adding `[fuzzy-matching]` to the installation command in pip:
+> ```
+> pip install taxopy[fuzzy-matching]
+> ```
+> Alternatively, you can install the `rapidfuzz` library:
+> ```
+> # Using pip
+> pip install rapidfuzz
+> # Using conda
+> conda install -c conda-forge rapidfuzz
+> ```
+
 ## Usage
 
 ```python
@@ -171,6 +184,34 @@ print(taxid)
 ```
 
     [[207598], [9504, 114498]]
+
+In certain situations, it is useful to allow slight variations between the input name and the matches in the database. This can be accomplished by setting the `fuzzy` parameter of `taxid_from_name` to `True`. For instance, in GTDB, some taxa have suffixes. The `fuzzy` parameter enables you to locate the taxonomic identifiers of all taxa with a name similar to the input, so you don't need to know the exact name beforehand.
+
+```python
+# The `taxdump_url` parameter of the `TaxDb` class can be used retrieve a custom taxdump from a URL. In this case, we will use a GTDB taxdump provided by Wei Shen (https://github.com/shenwei356/gtdb-taxdump)
+gtdb_taxdb = taxopy.TaxDb(taxdump_url="https://github.com/shenwei356/gtdb-taxdump/releases/download/v0.5.0/gtdb-taxdump-R220.tar.gz")
+for t in taxopy.taxid_from_name("Myxococcota", gtdb_taxdb, fuzzy=True):
+    print(taxopy.Taxon(t, gtdb_taxdb).name)
+```
+
+    Myxococcota_A
+    Myxococcota
+
+You can control the minimum similarity between the input name and the matches in the database by setting the `score_cutoff` parameter (default is 0.9).
+
+```python
+for t in taxopy.taxid_from_name(
+    "Myxococcota", gtdb_taxdb, fuzzy=True, score_cutoff=0.7
+):
+    print(taxopy.Taxon(t, gtdb_taxdb).name)
+```
+
+    Myxococcales
+    Myxococcota_A
+    Myxococcus
+    Myxococcia
+    Myxococcota
+    Myxococcaceae
 
 ## Acknowledgements
 
