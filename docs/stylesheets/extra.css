@@ -12,3 +12,8 @@
 figcaption {
     font-size: 0.68rem;
 }
+
+/* Mermaid */
+.mermaid {
+    text-align: center;
+}

@@ -2,7 +2,7 @@
 
 ## About `taxopy`
 
-`taxopy` is a Python package that provides an interface to NCBI-formatted taxonomic databases. It enables various operations on taxonomic data, such as obtaining complete lineages, determining the lowest common ancestors (LCAs), retrieving taxa names from taxonomic identifiers, and more.
+`taxopy` is a Python package that provides an interface for assessing NCBI-formatted taxonomic databases. It enables various operations on taxonomic data, such as obtaining complete lineages, determining the lowest common ancestors (LCAs), retrieving taxa names from taxonomic identifiers, and more.
 
 ## Installation
 
@@ -10,47 +10,47 @@ You can install `taxopy` on your computer using Python's `pip` or through the [`
 
 === "pip"
 
-    ```sh
-    pip install taxopy
+    ```shell-session
+    $ pip install taxopy
     ```
 
 === "Conda"
 
-    ```sh
-    conda install -c conda-forge -c bioconda taxopy
+    ```shell-session
+    $ conda install -c conda-forge -c bioconda taxopy
     ```
 
 === "Mamba"
 
-    ```sh
-    mamba install -c conda-forge -c bioconda taxopy
+    ```shell-session
+    $ mamba install -c conda-forge -c bioconda taxopy
     ```
 
 !!! info "Enabling fuzzy search of taxon names"
     `taxopy` supports fuzzy string matching to [search for taxa with names that are similar but not identical to the queries][retrieval-of-taxa-with-nearly-matching-names-though-fuzzy-search]. This feature is not enabled by default to avoid additional dependencies. However, you can enable it by installing the `fuzzy-matching` extra using `pip`:
 
-    ```sh
-    pip install taxopy[fuzzy-matching]
+    ```shell-session
+    $ pip install taxopy[fuzzy-matching]
     ```
 
     Alternatively, you can install the [`rapidfuzz`](https://rapidfuzz.github.io/RapidFuzz) library alongside `taxopy`:
 
     === "pip"
 
-        ```sh
-        pip install taxopy rapidfuzz
+        ```shell-session
+        $ pip install taxopy rapidfuzz
         ```
 
     === "Conda"
 
-        ```sh
-        conda install -c conda-forge -c bioconda taxopy rapidfuzz
+        ```shell-session
+        $ conda install -c conda-forge -c bioconda taxopy rapidfuzz
         ```
 
     === "Mamba"
 
-        ```sh
-        mamba install -c conda-forge -c bioconda taxopy rapidfuzz
+        ```shell-session
+        $ mamba install -c conda-forge -c bioconda taxopy rapidfuzz
         ```
 
 ## Acknowledgements

@@ -4,7 +4,7 @@
   <a href="https://apcamargo.github.io/taxopy"><b>Documentation</b></a> | <a href="https://doi.org/10.5281/zenodo.6993580"><b>DOI</b></a>
 </p>
 
-`taxopy` is a Python package that provides an interface to NCBI-formatted taxonomic databases. It enables various operations on taxonomic data, such as obtaining complete lineages, determining the lowest common ancestors (LCAs), retrieving taxa names from taxonomic identifiers, and more.
+`taxopy` is a Python package that provides an interface for assessing NCBI-formatted taxonomic databases. It enables various operations on taxonomic data, such as obtaining complete lineages, determining the lowest common ancestors (LCAs), retrieving taxa names from taxonomic identifiers, and more.
 
 ## Installation
 
@@ -30,9 +30,9 @@ conda install -c conda-forge -c bioconda taxopy
 > Alternatively, you can install the [`rapidfuzz`](https://rapidfuzz.github.io/RapidFuzz) library alongside `taxopy`:
 > ```
 > # Using pip
-> pip install rapidfuzz
+> pip install taxopy rapidfuzz
 > # Using conda
-> conda install -c conda-forge rapidfuzz
+> conda install -c conda-forge -c bioconda taxopy rapidfuzz
 > ```
 
 ## Usage
@@ -189,7 +189,7 @@ print(taxid)
 
     [[207598], [9504, 114498]]
 
-When querying a `TaxDb` using a taxon name, you can enable fuzzy search by setting the `fuzzy` parameter of [`taxid_from_name`][taxopy.taxid_from_name] to `True`. This allows the function to find taxa with names similar, but not identical, to the query string(s).
+When querying a `TaxDb` using a taxon name, you can enable fuzzy search by setting the `fuzzy` parameter of `taxid_from_name` to `True`. This allows the function to find taxa with names similar, but not identical, to the query string(s).
 
 For a practical use case of this feature, consider the [GTDB](https://gtdb.ecogenomic.org/) taxonomy. In GTDB [some taxa have suffixes appended to their names](https://gtdb.ecogenomic.org/faq#why-do-some-family-and-higher-rank-names-end-with-an-alphabetic-suffix) because they are either not monophyletic in the GTDB reference tree or have unstable placements between different releases. By using fuzzy searches, you can find all the taxonomic identifiers representing a given taxon, such as *Myxococcota*, without needing to know in advance if any suffixes are appended to the name.
 
