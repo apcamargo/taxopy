@@ -24,4 +24,5 @@ classifiers = [
 fuzzy-matching = ["rapidfuzz"]
 
 [project.urls]
-Home = "https://github.com/apcamargo/taxopy"
+Documentation = "https://apcamargo.github.io/taxopy"
+Repository = "https://github.com/apcamargo/taxopy"
