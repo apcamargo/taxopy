@@ -259,8 +259,21 @@ Some taxa may share the same name, which are known as homonyms. In such cases, t
 ```pycon
 >>> print(taxopy.taxid_from_name("Aotus", taxdb))
 [9504, 114498]
->>> print(taxopy.taxid_from_name(["Homininae", "Homo sapiens", "Aotus"], taxdb))
-[[207598], [9606], [9504, 114498]]
+>>> for ti in taxopy.taxid_from_name(
+...     ["Homininae", "Homo sapiens", "Aotus"], taxdb
+... ):
+...     print(f"{ti}:")
+...     for t in ti:
+...         taxon = taxopy.Taxon(t, taxdb)
+...         parent_taxon = taxon.parent(taxdb)
+...         print(f"{taxon.name} (TaxId: {t}, parent: {parent_taxon.name})")
+[207598]:
+Homininae (TaxId: 207598, parent: Hominidae)
+[9606]:
+Homo sapiens (TaxId: 9606, parent: Homo)
+[9504, 114498]:
+Aotus (TaxId: 9504, parent: Aotidae)
+Aotus (TaxId: 114498, parent: Mirbelieae)
 ```
 
 ### Retrieval of taxa with nearly matching names though fuzzy search
