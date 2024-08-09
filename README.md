@@ -101,13 +101,13 @@ print(lagomorpha.rank_name_dictionary)
 You can use the `parent` method to get a `Taxon` object of the parent node of a given taxon:
 
 ```python
-lagomorpha_parent = lagomorpha.parent(taxdb)
-print(lagomorpha_parent.rank)
-print(lagomorpha_parent.name)
+saccharomyces_parent = saccharomyces.parent(taxdb)
+print(saccharomyces_parent.rank)
+print(saccharomyces_parent.name)
 ```
 
-    clade
-    Glires
+    family
+    Saccharomycetaceae
 
 ### LCA and majority vote
 

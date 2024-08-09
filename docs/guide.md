@@ -93,11 +93,11 @@ order
 To obtain the [`Taxon`][taxopy.Taxon] object for the parent of a specified taxon, you can use the `parent` method.
 
 ```pycon
->>> lagomorpha_parent = lagomorpha.parent(taxdb)
->>> print(lagomorpha_parent.name)
-Glires
->>> print(lagomorpha_parent.rank)
-clade
+>>> saccharomyces_parent = saccharomyces.parent(taxdb)
+>>> print(saccharomyces_parent.name)
+Saccharomycetaceae
+>>> print(saccharomyces_parent.rank)
+family
 ```
 
 ## Identifying taxa shared between multiple lineages
@@ -243,7 +243,27 @@ Opisthokonta
 
 This functionality is useful in various scenarios. For example, if you have a set of taxa with different numbers of individuals in a community, you can use the number of individuals of each taxon as weights to determine the most specific taxon common to more than half of the individuals. Another popular application is the taxonomic assignment of metagenomic sequences[^1]<sup>,</sup>[^2]. In this case, each gene within a sequence is assigned to a taxon through alignment to reference genes, and the confidence of these assignments (quantified as alignment scores) is used as weights to determine a representative taxon for the entire sequence.
 
-## Retrieval of taxa with nearly matching names though fuzzy search
+## Retrieving TaxIds from taxa names
+
+In many cases, you might have the names of taxa of interest but not their corresponding TaxIds. `taxopy` provides the [`taxid_from_name`][taxopy.taxid_from_name] function, which allows you to programmatically retrieve TaxIds based on taxa names. You can input a single scientific name or a list of names, and the function will return a list of TaxIds or a list of lists of TaxIds, respectively.
+
+```pycon
+>>> print(taxopy.taxid_from_name("Homininae", taxdb))
+[207598]
+>>> print(taxopy.taxid_from_name(["Homininae", "Homo sapiens"], taxdb))
+[[207598], [9606]]
+```
+
+Some taxa may share the same name, which are known as homonyms. In such cases, the returned list will include multiple TaxIds.
+
+```pycon
+>>> print(taxopy.taxid_from_name("Aotus", taxdb))
+[9504, 114498]
+>>> print(taxopy.taxid_from_name(["Homininae", "Homo sapiens", "Aotus"], taxdb))
+[[207598], [9606], [9504, 114498]]
+```
+
+### Retrieval of taxa with nearly matching names though fuzzy search
 
 When querying a [`TaxDb`][taxopy.TaxDb] using a taxon name, you can enable fuzzy search by setting the `fuzzy` parameter of [`taxid_from_name`][taxopy.taxid_from_name] to `True`. This allows the function to find taxa with names similar, but not identical, to the query string(s).
 
