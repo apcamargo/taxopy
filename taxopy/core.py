@@ -23,7 +23,7 @@ from __future__ import annotations
 import os
 import tarfile
 import urllib.request
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from typing import Dict, List, Tuple
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
@@ -126,7 +126,7 @@ class TaxDb:
         self._oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
         # Create the taxid2parent, taxid2rank, and taxid2name dictionaries:
         self._taxid2parent, self._taxid2rank = self._import_nodes()
-        self._taxid2name = self._import_names()
+        self._taxid2name, self._taxid2names = self._import_names()
         # Delete temporary files if `keep_files` is set to `False`, unless
         # `nodes_dmp` and `names_dmp` were manually supplied:
         if not keep_files and (not nodes_dmp or not names_dmp):
@@ -135,6 +135,10 @@ class TaxDb:
     @property
     def taxid2name(self) -> Dict[int, str]:
         return self._taxid2name
+
+    @property
+    def taxid2names(self) -> Dict[int, str]:
+        return self._taxid2names
 
     @property
     def taxid2parent(self) -> Dict[int, int]:
@@ -164,9 +168,14 @@ class TaxDb:
                 for member in tf.getmembers():
                     if os.path.basename(member.name) == "nodes.dmp" and member.isfile():
                         nodes_dmp = ("nodes.dmp", tf.extractfile(member))
-                    elif os.path.basename(member.name) == "names.dmp" and member.isfile():
+                    elif (
+                        os.path.basename(member.name) == "names.dmp" and member.isfile()
+                    ):
                         names_dmp = ("names.dmp", tf.extractfile(member))
-                    elif os.path.basename(member.name) == "merged.dmp" and member.isfile():
+                    elif (
+                        os.path.basename(member.name) == "merged.dmp"
+                        and member.isfile()
+                    ):
                         merged_dmp = ("merged.dmp", tf.extractfile(member))
                 for p, m in [nodes_dmp, names_dmp, merged_dmp]:
                     with open(os.path.join(self._taxdb_dir, p), "wb") as fo:
@@ -215,17 +224,21 @@ class TaxDb:
 
     def _import_names(self):
         taxid2name = {}
+        taxid2names = defaultdict(list)
         with open(self._names_dmp, "r") as f:
             for line in f:
                 line = line.split("\t")
-                if line[6] == "scientific name":
-                    taxid = int(line[0])
-                    name = line[2].strip()
+                kind = line[6]
+                taxid = int(line[0])
+                name = line[2].strip()
+                if kind == "scientific name":
                     taxid2name[taxid] = name
+                taxid2names[taxid].append((kind, name))
+
         if self._merged_dmp:
             for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
                 taxid2name[oldtaxid] = taxid2name[newtaxid]
-        return taxid2name
+        return taxid2name, taxid2names
 
     def _delete_files(self):
         os.remove(self._nodes_dmp)
@@ -253,6 +266,8 @@ class Taxon:
         The NCBI taxonomic identifier the object represents (e.g., 9606).
     name: str
         The name of the taxon (e.g., 'Homo sapiens').
+    names: list
+        All names of the taxon as a list of kind and name (e.g., `[('authority', 'Homo sapiens Linnaeus, 1758'), ('scientific name', 'Homo sapiens'), ('genbank common name', 'human')])`.
     rank: str
         The rank of the taxon (e.g., 'species').
     legacy_taxid: bool
@@ -302,6 +317,7 @@ class Taxon:
                 "The input integer is not a valid NCBI taxonomic identifier."
             )
         self._name = taxdb.taxid2name[self.taxid]
+        self._names = taxdb.taxid2names[self.taxid]
         self._rank = taxdb.taxid2rank[self.taxid]
         if taxdb.oldtaxid2newtaxid:
             self._legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
@@ -322,6 +338,10 @@ class Taxon:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def names(self) -> str:
+        return self._names
 
     @property
     def rank(self) -> str:
