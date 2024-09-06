@@ -137,7 +137,7 @@ class TaxDb:
         return self._taxid2name
 
     @property
-    def taxid2names(self) -> Dict[int, str]:
+    def taxid2names(self) -> Dict[int, List[Tuple[str, str]]]:
         return self._taxid2names
 
     @property
@@ -340,7 +340,7 @@ class Taxon:
         return self._name
 
     @property
-    def names(self) -> str:
+    def names(self) -> List[Tuple[str, str]]:
         return self._names
 
     @property
