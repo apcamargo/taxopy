@@ -24,7 +24,7 @@ import os
 import tarfile
 import urllib.request
 from collections import OrderedDict, defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -83,11 +83,11 @@ class TaxDb:
     def __init__(
         self,
         *,
-        taxdb_dir: str = None,
-        taxdump_url: str = None,
-        nodes_dmp: str = None,
-        names_dmp: str = None,
-        merged_dmp: str = None,
+        taxdb_dir: Optional[str] = None,
+        taxdump_url: Optional[str] = None,
+        nodes_dmp: Optional[str] = None,
+        names_dmp: Optional[str] = None,
+        merged_dmp: Optional[str] = None,
         keep_files: bool = False,
     ):
         if not taxdb_dir:
@@ -152,7 +152,7 @@ class TaxDb:
     def oldtaxid2newtaxid(self) -> Dict[int, int]:
         return self._oldtaxid2newtaxid
 
-    def _download_taxonomy(self, url: str = None):
+    def _download_taxonomy(self, url: Optional[str] = None):
         if not url:
             url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
         tmp_taxonomy_file = os.path.join(self._taxdb_dir, "taxdump.tar.gz")
@@ -163,22 +163,20 @@ class TaxDb:
                 "Download of taxonomy files failed. The server may be offline."
             )
         try:
-            nodes_dmp, names_dmp, merged_dmp = None, None, None
             with tarfile.open(tmp_taxonomy_file) as tf:
                 for member in tf.getmembers():
-                    if os.path.basename(member.name) == "nodes.dmp" and member.isfile():
-                        nodes_dmp = ("nodes.dmp", tf.extractfile(member))
-                    elif (
-                        os.path.basename(member.name) == "names.dmp" and member.isfile()
-                    ):
-                        names_dmp = ("names.dmp", tf.extractfile(member))
-                    elif (
-                        os.path.basename(member.name) == "merged.dmp"
-                        and member.isfile()
-                    ):
-                        merged_dmp = ("merged.dmp", tf.extractfile(member))
-                for p, m in [nodes_dmp, names_dmp, merged_dmp]:
-                    with open(os.path.join(self._taxdb_dir, p), "wb") as fo:
+                    if not member.isfile():
+                        continue
+
+                    filename = os.path.basename(member.name)
+                    if filename not in ("nodes.dmp", "names.dmp", "merged.dmp"):
+                        continue
+
+                    m = tf.extractfile(member)
+                    if m is None:
+                        continue
+
+                    with open(os.path.join(self._taxdb_dir, filename), "wb") as fo:
                         while True:
                             chunk = m.read(1024)
                             if not chunk:
@@ -267,7 +265,9 @@ class Taxon:
     name: str
         The name of the taxon (e.g., 'Homo sapiens').
     names: list
-        All names of the taxon as a list of kind and name (e.g., `[('authority', 'Homo sapiens Linnaeus, 1758'), ('scientific name', 'Homo sapiens'), ('genbank common name', 'human')])`.
+        All names of the taxon as a list of kind and name (e.g.,
+        `[('authority', 'Homo sapiens Linnaeus, 1758'), ('scientific name',
+        'Homo sapiens'), ('genbank common name', 'human')])`.
     rank: str
         The rank of the taxon (e.g., 'species').
     legacy_taxid: bool
@@ -310,6 +310,8 @@ class Taxon:
         If the input integer is not a valid NCBI taxonomic identifier.
     """
 
+    _legacy_taxid: Optional[bool]
+
     def __init__(self, taxid: int, taxdb: TaxDb):
         self._taxid = taxid
         if self.taxid not in taxdb.taxid2name:
@@ -348,7 +350,7 @@ class Taxon:
         return self._rank
 
     @property
-    def legacy_taxid(self) -> bool:
+    def legacy_taxid(self) -> bool | None:
         return self._legacy_taxid
 
     @property
@@ -422,7 +424,7 @@ class Taxon:
         return str(self)
 
     def __eq__(self, other: object) -> bool:
-        if other.__class__ is not self.__class__:
+        if not isinstance(other, Taxon):
             return NotImplemented
         return self.taxid_lineage == other.taxid_lineage
 
