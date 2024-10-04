@@ -69,7 +69,7 @@ To retrieve the TaxId to which a legacy TaxId has been merged, you can use the `
 >>> lagomorpha = taxopy.Taxon(9975, taxdb)
 ```
 
-Each [`Taxon`][taxopy.Taxon] object stores various data related to the taxon, including its TaxId, name, rank, and lineage. The lineage data comprises the TaxIds, names, and ranks of its parent taxa.
+Each [`Taxon`][taxopy.Taxon] object stores various data related to the taxon, including its TaxId, names, rank, and lineage. The lineage data comprises the TaxIds, scientific names, and ranks of its parent taxa.
 
 ```pycon
 >>> print(lagomorpha.taxid)
@@ -80,6 +80,8 @@ Each [`Taxon`][taxopy.Taxon] object stores various data related to the taxon, in
 [('order', 9975), ('clade', 314147), ('superorder', 314146), ('clade', 1437010), ('clade', 9347), ('clade', 32525), ('class', 40674), ('clade', 32524), ('clade', 32523), ('clade', 1338369), ('superclass', 8287), ('clade', 117571), ('clade', 117570), ('clade', 7776), ('clade', 7742), ('subphylum', 89593), ('phylum', 7711), ('clade', 33511), ('clade', 33213), ('clade', 6072), ('kingdom', 33208), ('clade', 33154), ('superkingdom', 2759), ('no rank', 131567), ('no rank', 1)]
 >>> print(lagomorpha.name)
 Lagomorpha
+>>> print(lagomorpha.all_names)
+{'authority': ['Lagomorpha Brandt, 1855'], 'scientific name': ['Lagomorpha'], 'blast name': ['rabbits & hares']}
 >>> print(lagomorpha.name_lineage)
 ['Lagomorpha', 'Glires', 'Euarchontoglires', 'Boreoeutheria', 'Eutheria', 'Theria', 'Mammalia', 'Amniota', 'Tetrapoda', 'Dipnotetrapodomorpha', 'Sarcopterygii', 'Euteleostomi', 'Teleostomi', 'Gnathostomata', 'Vertebrata', 'Craniata', 'Chordata', 'Deuterostomia', 'Bilateria', 'Eumetazoa', 'Metazoa', 'Opisthokonta', 'Eukaryota', 'cellular organisms', 'root']
 >>> print(lagomorpha.ranked_name_lineage)
@@ -88,6 +90,18 @@ Lagomorpha
 OrderedDict({'order': 'Lagomorpha', 'clade': 'Opisthokonta', 'superorder': 'Euarchontoglires', 'class': 'Mammalia', 'superclass': 'Sarcopterygii', 'subphylum': 'Craniata', 'phylum': 'Chordata', 'kingdom': 'Metazoa', 'superkingdom': 'Eukaryota'})
 >>> print(lagomorpha.rank)
 order
+```
+
+A taxon's scientific name is stored in the `name` field, while `all_names` is a dictionary from the kind of name to a list of names. 
+
+```pycon
+>>> sus = taxopy.Taxon(9823, taxdb)
+>>> print(sus.name)
+'Sus scrofa'
+>>> print(sus.all_names)
+{'genbank common name': ['pig'], 'common name': ['pigs', 'swine', 'wild boar'], 'authority': ['Sus scrofa Linnaeus, 1758'], 'includes': ['Sus scrofa LW', 'Sus scrofa Pietrain'], 'scientific name': ['Sus scrofa']}
+>>> print(sus.all_names['common name'])
+['pigs', 'swine', 'wild boar']
 ```
 
 To obtain the [`Taxon`][taxopy.Taxon] object for the parent of a specified taxon, you can use the `parent` method.
