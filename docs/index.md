@@ -6,7 +6,7 @@
 
 ## Installation
 
-You can install `taxopy` on your computer using Python's `pip` or through the [`conda`](https://conda.io/projects/conda/en/latest) or [`mamba`](https://mamba.readthedocs.io/en/latest) package managers:
+You can install `taxopy` on your computer using Python's `pip`, [`uv`](https://docs.astral.sh/uv/), or through the [`pixi`](https://pixi.sh/latest/), [`conda`](https://conda.io/projects/conda/en/latest) or [`mamba`](https://mamba.readthedocs.io/en/latest) package managers:
 
 === "pip"
 
@@ -14,24 +14,52 @@ You can install `taxopy` on your computer using Python's `pip` or through the [`
     $ pip install taxopy
     ```
 
+=== "uv"
+
+    ```shell-session
+    $ uv init example
+    $ cd example
+    $ uv add taxopy
+    ```
+
+=== "Pixi"
+
+    ```shell-session
+    $ pixi init --channel conda-forge --channel bioconda example
+    $ cd example
+    $ pixi add taxopy
+    ```
+
 === "Conda"
 
     ```shell-session
-    $ conda install -c conda-forge -c bioconda taxopy
+    $ conda create -n taxopy-env -c conda-forge -c bioconda taxopy
+    $ conda activate taxopy-env
     ```
 
 === "Mamba"
 
     ```shell-session
-    $ mamba install -c conda-forge -c bioconda taxopy
+    $ mamba create -n taxopy-env -c conda-forge -c bioconda taxopy
+    $ mamba activate taxopy-env
     ```
 
 !!! info "Enabling fuzzy search of taxon names"
-    `taxopy` supports fuzzy string matching to [search for taxa with names that are similar but not identical to the queries][retrieval-of-taxa-with-nearly-matching-names-though-fuzzy-search]. This feature is not enabled by default to avoid additional dependencies. However, you can enable it by installing the `fuzzy-matching` extra using `pip`:
+    `taxopy` supports fuzzy string matching to [search for taxa with names that are similar but not identical to the queries][retrieval-of-taxa-with-nearly-matching-names-though-fuzzy-search]. This feature is not enabled by default to avoid additional dependencies. However, you can enable it by installing the `fuzzy-matching` extra using `pip` or `uv`:
 
-    ```shell-session
-    $ pip install taxopy[fuzzy-matching]
-    ```
+    === "pip"
+
+        ```shell-session
+        $ pip install taxopy[fuzzy-matching]
+        ```
+
+    === "uv"
+
+        ```shell-session
+        $ uv init example
+        $ cd example
+        $ uv add taxopy --extra fuzzy-matching
+        ```
 
     Alternatively, you can install the [`rapidfuzz`](https://rapidfuzz.github.io/RapidFuzz) library alongside `taxopy`:
 
@@ -41,16 +69,34 @@ You can install `taxopy` on your computer using Python's `pip` or through the [`
         $ pip install taxopy rapidfuzz
         ```
 
+    === "uv"
+
+        ```shell-session
+        $ uv init example
+        $ cd example
+        $ uv add taxopy rapidfuzz
+        ```
+
+    === "Pixi"
+
+        ```shell-session
+        $ pixi init --channel conda-forge --channel bioconda example
+        $ cd example
+        $ pixi add taxopy rapidfuzz
+        ```
+
     === "Conda"
 
         ```shell-session
-        $ conda install -c conda-forge -c bioconda taxopy rapidfuzz
+        $ conda create -n taxopy-env -c conda-forge -c bioconda taxopy rapidfuzz
+        $ conda activate taxopy-env
         ```
 
     === "Mamba"
 
         ```shell-session
-        $ mamba install -c conda-forge -c bioconda taxopy rapidfuzz
+        $ mamba create -n taxopy-env -c conda-forge -c bioconda taxopy rapidfuzz
+        $ mamba activate taxopy-env
         ```
 
 ## Acknowledgements
