@@ -23,7 +23,7 @@ from __future__ import annotations
 import os
 import tarfile
 import urllib.request
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from typing import Dict, List, Tuple, Optional
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
@@ -246,10 +246,10 @@ class TaxDb:
 
                 taxid2all_names[taxid][kind].append(name)
 
-            if self._merged_dmp:
-                for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
-                    taxid2name[oldtaxid] = taxid2name[newtaxid]
-                    taxid2all_names[oldtaxid] = taxid2all_names[newtaxid]
+        if self._merged_dmp:
+            for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
+                taxid2name[oldtaxid] = taxid2name[newtaxid]
+                taxid2all_names[oldtaxid] = taxid2all_names[newtaxid]
 
         return taxid2name, taxid2all_names
 
