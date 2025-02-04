@@ -52,8 +52,8 @@ class TaxDb:
     keep_files : bool, default False
         Keep the `nodes.dmp` and `names.dmp` files after the TaxDb object is
         created. If `taxdb_dir` was supplied the whole directory will be deleted.
-        By default the files are deleted, unless `nodes_dmp` and `names_dmp`
-        were manually supplied.
+        By default the files are deleted, unless `nodes_dmp`, `names_dmp`, or
+        `taxdb_dir` were manually supplied.
 
     Attributes
     ----------
@@ -133,8 +133,14 @@ class TaxDb:
         self._taxid2parent, self._taxid2rank = self._import_nodes()
         self._taxid2name, self._taxid2all_names = self._import_names()
         # Delete temporary files if `keep_files` is set to `False`, unless
-        # `nodes_dmp` and `names_dmp` were manually supplied:
-        if not keep_files and (not nodes_dmp or not names_dmp):
+        # `nodes_dmp`, `names_dmp`, or `taxdb_dir` were manually supplied:
+        # Determine whether to delete files based on multiple conditions
+        if all([
+            # User hasn't explicitly requested to keep files
+            not keep_files,
+            # Files weren't manually provided by user
+            (not nodes_dmp or not names_dmp or not taxdb_dir),
+        ]):
             self._delete_files()
 
     @property
