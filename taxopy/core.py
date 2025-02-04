@@ -24,7 +24,7 @@ import os
 import tarfile
 import urllib.request
 from collections import OrderedDict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -59,7 +59,11 @@ class TaxDb:
     ----------
     taxid2name : dict
         A dictionary where the keys are taxonomic identifiers and the values are
-        their corresponding names.
+        their corresponding scientific names.
+    taxid2all_names : dict
+        A two-level dictionary where the keys are the taxonomic identifiers,
+        yielding a dictionary mapping the kinds of names from the NCBI
+        taxonomy (e.g. "scientific name", "common name") to the corresponding names.
     taxid2parent: dict
         A dictionary where the keys are taxonomic identifiers and the values are
         the taxonomic identifiers of their corresponding parent taxon.
@@ -83,11 +87,11 @@ class TaxDb:
     def __init__(
         self,
         *,
-        taxdb_dir: str = None,
-        taxdump_url: str = None,
-        nodes_dmp: str = None,
-        names_dmp: str = None,
-        merged_dmp: str = None,
+        taxdb_dir: Optional[str] = None,
+        taxdump_url: Optional[str] = None,
+        nodes_dmp: Optional[str] = None,
+        names_dmp: Optional[str] = None,
+        merged_dmp: Optional[str] = None,
         keep_files: bool = False,
     ):
         if not taxdb_dir:
@@ -126,7 +130,7 @@ class TaxDb:
         self._oldtaxid2newtaxid = self._import_merged() if self._merged_dmp else None
         # Create the taxid2parent, taxid2rank, and taxid2name dictionaries:
         self._taxid2parent, self._taxid2rank = self._import_nodes()
-        self._taxid2name = self._import_names()
+        self._taxid2name, self._taxid2all_names = self._import_names()
         # Delete temporary files if `keep_files` is set to `False`, unless
         # `nodes_dmp` and `names_dmp` were manually supplied:
         if not keep_files and (not nodes_dmp or not names_dmp):
@@ -135,6 +139,10 @@ class TaxDb:
     @property
     def taxid2name(self) -> Dict[int, str]:
         return self._taxid2name
+
+    @property
+    def taxid2all_names(self) -> Dict[int, dict[str, List[str]]]:
+        return self._taxid2all_names
 
     @property
     def taxid2parent(self) -> Dict[int, int]:
@@ -148,7 +156,7 @@ class TaxDb:
     def oldtaxid2newtaxid(self) -> Dict[int, int]:
         return self._oldtaxid2newtaxid
 
-    def _download_taxonomy(self, url: str = None):
+    def _download_taxonomy(self, url: Optional[str] = None):
         if not url:
             url = "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
         tmp_taxonomy_file = os.path.join(self._taxdb_dir, "taxdump.tar.gz")
@@ -159,17 +167,20 @@ class TaxDb:
                 "Download of taxonomy files failed. The server may be offline."
             )
         try:
-            nodes_dmp, names_dmp, merged_dmp = None, None, None
             with tarfile.open(tmp_taxonomy_file) as tf:
                 for member in tf.getmembers():
-                    if os.path.basename(member.name) == "nodes.dmp" and member.isfile():
-                        nodes_dmp = ("nodes.dmp", tf.extractfile(member))
-                    elif os.path.basename(member.name) == "names.dmp" and member.isfile():
-                        names_dmp = ("names.dmp", tf.extractfile(member))
-                    elif os.path.basename(member.name) == "merged.dmp" and member.isfile():
-                        merged_dmp = ("merged.dmp", tf.extractfile(member))
-                for p, m in [nodes_dmp, names_dmp, merged_dmp]:
-                    with open(os.path.join(self._taxdb_dir, p), "wb") as fo:
+                    if not member.isfile():
+                        continue
+
+                    filename = os.path.basename(member.name)
+                    if filename not in ("nodes.dmp", "names.dmp", "merged.dmp"):
+                        continue
+
+                    m = tf.extractfile(member)
+                    if m is None:
+                        continue
+
+                    with open(os.path.join(self._taxdb_dir, filename), "wb") as fo:
                         while True:
                             chunk = m.read(1024)
                             if not chunk:
@@ -213,19 +224,34 @@ class TaxDb:
                 taxid2parent[oldtaxid] = taxid2parent[newtaxid]
         return taxid2parent, taxid2rank
 
-    def _import_names(self):
-        taxid2name = {}
+    def _import_names(self) -> Tuple[Dict[int, str], Dict[int, dict[str, List[str]]]]:
+        taxid2name: Dict[int, str] = {}
+        taxid2all_names: Dict[int, dict[str, List[str]]] = {}
+
         with open(self._names_dmp, "r") as f:
             for line in f:
-                line = line.split("\t")
-                if line[6] == "scientific name":
-                    taxid = int(line[0])
-                    name = line[2].strip()
+                fields = line.strip("\n").split("\t")
+                kind = fields[6]
+                taxid = int(fields[0])
+                name = fields[2].strip()
+
+                if kind == "scientific name":
                     taxid2name[taxid] = name
+
+                if taxid not in taxid2all_names:
+                    taxid2all_names[taxid] = {}
+
+                if kind not in taxid2all_names[taxid]:
+                    taxid2all_names[taxid][kind] = []
+
+                taxid2all_names[taxid][kind].append(name)
+
         if self._merged_dmp:
             for oldtaxid, newtaxid in self._oldtaxid2newtaxid.items():
                 taxid2name[oldtaxid] = taxid2name[newtaxid]
-        return taxid2name
+                taxid2all_names[oldtaxid] = taxid2all_names[newtaxid]
+
+        return taxid2name, taxid2all_names
 
     def _delete_files(self):
         os.remove(self._nodes_dmp)
@@ -253,6 +279,11 @@ class Taxon:
         The NCBI taxonomic identifier the object represents (e.g., 9606).
     name: str
         The name of the taxon (e.g., 'Homo sapiens').
+    all_names: dict
+        All names of the taxon as a dictionary, mapping kind to the list of names
+        (e.g., `all_names['authority'] = ['Homo sapiens Linnaeus, 1758']`,
+        `all_names['genbank common name'] = ['human']`. In many cases, only one
+        name is provided, but e.g. for `common name` multiple names may be available.
     rank: str
         The rank of the taxon (e.g., 'species').
     legacy_taxid: bool
@@ -295,6 +326,8 @@ class Taxon:
         If the input integer is not a valid NCBI taxonomic identifier.
     """
 
+    _legacy_taxid: Optional[bool]
+
     def __init__(self, taxid: int, taxdb: TaxDb):
         self._taxid = taxid
         if self.taxid not in taxdb.taxid2name:
@@ -302,6 +335,7 @@ class Taxon:
                 "The input integer is not a valid NCBI taxonomic identifier."
             )
         self._name = taxdb.taxid2name[self.taxid]
+        self._all_names = taxdb.taxid2all_names[self.taxid]
         self._rank = taxdb.taxid2rank[self.taxid]
         if taxdb.oldtaxid2newtaxid:
             self._legacy_taxid = self.taxid in taxdb.oldtaxid2newtaxid
@@ -324,11 +358,15 @@ class Taxon:
         return self._name
 
     @property
+    def all_names(self) -> Dict[str, List[str]]:
+        return self._all_names
+
+    @property
     def rank(self) -> str:
         return self._rank
 
     @property
-    def legacy_taxid(self) -> bool:
+    def legacy_taxid(self) -> bool | None:
         return self._legacy_taxid
 
     @property
@@ -402,7 +440,7 @@ class Taxon:
         return str(self)
 
     def __eq__(self, other: object) -> bool:
-        if other.__class__ is not self.__class__:
+        if not isinstance(other, Taxon):
             return NotImplemented
         return self.taxid_lineage == other.taxid_lineage
 
