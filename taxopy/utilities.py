@@ -161,7 +161,7 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
 
     Parameters
     ----------
-    taxon_list : list
+    taxon_list : list of Taxon
         A list containing at least two Taxon objects.
     taxdb : TaxDb
         A TaxDb object.
@@ -169,12 +169,14 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
     Returns
     -------
     _AggregatedTaxon
-        The _AggregatedTaxon object of the lowest common ancestor (LCA) of the inputs.
+        The _AggregatedTaxon object of the lowest common ancestor (LCA) of the
+        inputs.
 
     Raises
     ------
     LCAError
-        If the input list has less than two Taxon objects.
+        When the input list contains fewer than two Taxon objects or when no
+        taxa are common across the provided lineages.
     """
     if len(taxon_list) < 2:
         raise LCAError("The input list must contain at least two Taxon objects.")
@@ -184,7 +186,7 @@ def find_lca(taxon_list: List[Taxon], taxdb: TaxDb) -> Taxon:
         if taxid in overlap:
             aggregated_taxa = [taxon.taxid for taxon in taxon_list]
             return _AggregatedTaxon(taxid, taxdb, 1.0, aggregated_taxa)
-    return _AggregatedTaxon(1, taxdb, 1.0, [])
+    raise LCAError("No taxon is shared by the input lineages.")
 
 
 def find_majority_vote(
@@ -199,14 +201,14 @@ def find_majority_vote(
 
     Parameters
     ----------
-    taxon_list : list
+    taxon_list : list of Taxon
         A list containing at least two Taxon objects.
     taxdb : TaxDb
         A TaxDb object.
     fraction: float, default 0.5
         The returned taxon will be shared by more than `fraction` of the input
         taxa lineages. This value must be greater than 0.0 and less than 1.0.
-    weights: list, optional
+    weights: list of float, optional
         A list of weights associated with the taxa lineages in `taxon_list`.
         These values are used to weight the votes of their associated lineages.
 
@@ -214,14 +216,15 @@ def find_majority_vote(
     -------
     _AggregatedTaxon
         The _AggregatedTaxon object of the most specific taxon that is shared by
-        more than a specified fraction of the input lineages.
+        more than the chosen fraction of the input lineages.
 
     Raises
     ------
     MajorityVoteError
-        If the input taxon list has less than two Taxon objects or if the
-        `fraction` parameter is less than or equal to 0.0 or greater than or
-        equal to 1.
+        If any of the following conditions occur: the input taxon list contains
+        fewer than two Taxon objects; the fraction parameter is less than or
+        equal to 0.0 or greater than or equal to 1.0; or there are no taxa
+        common to the input lineages.
     """
     if fraction <= 0.0 or fraction >= 1:
         raise MajorityVoteError(
@@ -236,40 +239,44 @@ def find_majority_vote(
             "The input taxon and weights lists must have the same length."
         )
     if weights:
-        return _weighted_majority_vote(taxon_list, taxdb, fraction, weights)
+        majority_vote = _weighted_majority_vote(taxon_list, taxdb, fraction, weights)
     else:
-        return _unweighted_majority_vote(taxon_list, taxdb, fraction)
-    return _AggregatedTaxon(1, taxdb, 1.0, [])
+        majority_vote = _unweighted_majority_vote(taxon_list, taxdb, fraction)
+    if majority_vote:
+        return majority_vote
+    else:
+        raise MajorityVoteError("No taxon is shared by the input lineages.")
 
 
 def _weighted_majority_vote(
     taxon_list: List[Taxon],
     taxdb: TaxDb,
-    fraction: float = 0.5,
-    weights: Optional[List[float]] = None,
-) -> Taxon:
+    fraction: float,
+    weights: List[float],
+) -> Optional[Taxon]:
     """
     Takes a list of multiple Taxon objects and returns the most specific taxon
     that is shared by more than the chosen fraction of the input lineages.
 
     Parameters
     ----------
-    taxon_list : list
+    taxon_list : list of Taxon
         A list containing at least two Taxon objects.
     taxdb : TaxDb
         A TaxDb object.
-    fraction: float, default 0.5
+    fraction: float
         The returned taxon will be shared by more than `fraction` of the input
         taxa lineages. This value must be greater than 0.0 and less than 1.
-    weights: list, optional
+    weights: list of float, optional
         A list of weights associated with the taxa lineages in `taxon_list`.
         These values are used to weight the votes of their associated lineages.
 
     Returns
     -------
-    _AggregatedTaxon
+    _AggregatedTaxon or None
         The _AggregatedTaxon object of the most specific taxon that is shared by
-        more than a specified fraction of the input lineages.
+        more than the chosen fraction of the input lineages. If no taxon is
+        shared by the input lineages, `None` is returned.
     """
     total_weight = sum(weights)
     zipped_taxid_lineage = list(
@@ -293,30 +300,32 @@ def _weighted_majority_vote(
                 return _AggregatedTaxon(
                     majority_taxon[0][0], taxdb, agreement, aggregated_taxa
                 )
+    return None
 
 
 def _unweighted_majority_vote(
-    taxon_list: List[Taxon], taxdb: TaxDb, fraction: float = 0.5
-) -> Taxon:
+    taxon_list: List[Taxon], taxdb: TaxDb, fraction: float
+) -> Optional[Taxon]:
     """
     Takes a list of multiple Taxon objects and returns the most specific taxon
     that is shared by more than the chosen fraction of the input lineages.
 
     Parameters
     ----------
-    taxon_list : list
+    taxon_list : list of Taxon
         A list containing at least two Taxon objects.
     taxdb : TaxDb
         A TaxDb object.
-    fraction: float, default 0.5
+    fraction: float
         The returned taxon will be shared by more than `fraction` of the input
         taxa lineages. This value must be greater than 0.0 and less than 1.
 
     Returns
     -------
-    _AggregatedTaxon
+    _AggregatedTaxon or None
         The _AggregatedTaxon object of the most specific taxon that is shared by
-        more than a specified fraction of the input lineages.
+        more than the chosen fraction of the input lineages. If no taxon is
+        shared by the input lineages, `None` is returned.
     """
     n_taxa = len(taxon_list)
     zipped_taxid_lineage = list(
@@ -335,3 +344,4 @@ def _unweighted_majority_vote(
                 return _AggregatedTaxon(
                     majority_taxon[0][0], taxdb, agreement, aggregated_taxa
                 )
+    return None

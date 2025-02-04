@@ -24,7 +24,7 @@ import os
 import tarfile
 import urllib.request
 from collections import OrderedDict
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 from taxopy.exceptions import DownloadError, ExtractionError, TaxidError
 
@@ -63,14 +63,15 @@ class TaxDb:
     taxid2all_names : dict
         A two-level dictionary where the keys are the taxonomic identifiers,
         yielding a dictionary mapping the kinds of names from the NCBI
-        taxonomy (e.g. "scientific name", "common name") to the corresponding names.
+        taxonomy (e.g. "scientific name", "common name") to the corresponding
+        names.
     taxid2parent: dict
         A dictionary where the keys are taxonomic identifiers and the values are
         the taxonomic identifiers of their corresponding parent taxon.
     taxid2rank: dict
         A dictionary where the keys are taxonomic identifiers and the values are
         their corresponding ranks.
-    oldtaxid2newtaxid: dict
+    oldtaxid2newtaxid: dict or None
         A dictionary where the keys are legacy taxonomic identifiers and the
         values are their corresponding new identifiers. If pre-downloaded
         `nodes.dmp` and `names.dmp` files were provided but the `merged.dmp`
@@ -153,7 +154,7 @@ class TaxDb:
         return self._taxid2rank
 
     @property
-    def oldtaxid2newtaxid(self) -> Dict[int, int]:
+    def oldtaxid2newtaxid(self) -> Optional[Dict[int, int]]:
         return self._oldtaxid2newtaxid
 
     def _download_taxonomy(self, url: Optional[str] = None):
@@ -171,15 +172,10 @@ class TaxDb:
                 for member in tf.getmembers():
                     if not member.isfile():
                         continue
-
                     filename = os.path.basename(member.name)
                     if filename not in ("nodes.dmp", "names.dmp", "merged.dmp"):
                         continue
-
                     m = tf.extractfile(member)
-                    if m is None:
-                        continue
-
                     with open(os.path.join(self._taxdb_dir, filename), "wb") as fo:
                         while True:
                             chunk = m.read(1024)
@@ -366,7 +362,7 @@ class Taxon:
         return self._rank
 
     @property
-    def legacy_taxid(self) -> bool | None:
+    def legacy_taxid(self) -> Optional[bool]:
         return self._legacy_taxid
 
     @property

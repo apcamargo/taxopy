@@ -49,7 +49,7 @@ superkingdom
 131567
 ```
 
-To retrieve the TaxId to which a legacy TaxId has been merged, you can use the `merged2newtaxid` attribute. For instance, the legacy TaxIds 260 and 29537 have been merged into [TaxId 143224](https://www.ncbi.nlm.nih.gov/datasets/taxonomy/143224/) ("*Zobellia uliginosa*").
+To retrieve the TaxId to which a legacy TaxId has been merged, you can use the `oldtaxid2newtaxid` attribute. For instance, the legacy TaxIds 260 and 29537 have been merged into [TaxId 143224](https://www.ncbi.nlm.nih.gov/datasets/taxonomy/143224/) ("*Zobellia uliginosa*").
 
 ```pycon
 >>> print(taxdb.oldtaxid2newtaxid[260])
@@ -192,7 +192,7 @@ graph LR
         subgraph cluster2 ["Lagomorpha, Homo sapiens, Gorilla gorilla"]
             M -.-> E(Euarchontoglires)
             E -.-> HN(Homininae)
-            subgraph cluster3 ["Homo sapiens,\nGorilla gorilla"]
+            subgraph cluster3 ["Homo sapiens, Gorilla gorilla"]
                 HN
             end
         end
