@@ -119,14 +119,18 @@ family
 Due to the hierarchical nature of taxonomies, different taxa may share common ancestors at one or more ranks in their lineages. For example, the *Lagomorpha* and *Homo sapiens* lineages have common taxa from the root of the taxonomy (parent to all other taxa) up until *Euarchontoglires*, from which they then diverge.
 
 ```mermaid
+---
+config:
+  layout: elk
+---
 graph LR
-    subgraph cluster ["Lagomorpha, Homo sapiens"]
-        R(Root) -.-> E(Euarchontoglires)
+    subgraph cluster ["*Lagomorpha*, *Homo sapiens*"]
+        R(Root) -.-> E(*Euarchontoglires*)
     end
-    E --> P(Primates)
-    P -.-> H(Homo sapiens)
-    E --> G(Glires)
-    G --> L(Lagomorpha)
+    E --> P(*Primates*)
+    P -.-> H(*Homo sapiens*)
+    E --> G(*Glires*)
+    G --> L(*Lagomorpha*)
 ```
 In `taxopy`, [`Taxon`][taxopy.Taxon] objects store the lineage data for each taxon, enabling the identification of shared taxa between two or more lineages. `taxopy` provides two functions for this purpose:
 
@@ -147,18 +151,22 @@ Euarchontoglires
 The LCA can be uninformative when determining a representative taxon for a set of lineages. For instance, consider the lineages of *Lagomorpha*, *Homo sapiens*, and *Saccharomyces*.
 
 ```mermaid
+---
+config:
+  layout: elk
+---
 graph LR
-    subgraph cluster1 ["Saccharomyces, Lagomorpha, Homo sapiens"]
-        R(Root) -.-> O(Opisthokonta) --> M(Metazoa)
-        subgraph cluster2 ["Lagomorpha, Homo sapiens"]
-            M -.-> E(Euarchontoglires)
+    subgraph cluster1 ["*Saccharomyces*, *Lagomorpha*, *Homo sapiens*"]
+        R(Root) -.-> O(*Opisthokonta*) --> M(*Metazoa*)
+        subgraph cluster2 ["*Lagomorpha*, *Homo sapiens*"]
+            M -.-> E(*Euarchontoglires*)
         end
     end
-    E --> P(Primates)
-    P -.-> H(Homo sapiens)
-    E --> G(Glires)
-    G --> L(Lagomorpha)
-    O --> F(Fungi) -...-> S(Saccharomyces)
+    E --> P(*Primates*)
+    P -.-> H(*Homo sapiens*)
+    E --> G(*Glires*)
+    G --> L(*Lagomorpha*)
+    O --> F(*Fungi*) -...-> S(*Saccharomyces*)
 ```
 
 *Saccharomyces* is very distantly related to both *Lagomorpha* and *Homo sapiens*, making the LCA of these three lineages *Opisthokonta*, a broad group within *Eukaryota* that includes both animals and fungi.
@@ -186,22 +194,26 @@ By default, [`find_majority_vote`][taxopy.find_majority_vote] requires the taxon
 Let's add *Gorilla gorilla* to the set of lineages we are investigating.
 
 ```mermaid
+---
+config:
+  layout: elk
+---
 graph LR
-    subgraph cluster1 ["Saccharomyces, Lagomorpha, Homo sapiens, Gorilla gorilla"]
-        R(Root) -.-> O(Opisthokonta) --> M(Metazoa)
-        subgraph cluster2 ["Lagomorpha, Homo sapiens, Gorilla gorilla"]
-            M -.-> E(Euarchontoglires)
-            E -.-> HN(Homininae)
-            subgraph cluster3 ["Homo sapiens, Gorilla gorilla"]
+    subgraph cluster1 ["*Saccharomyces*, *Lagomorpha*, *Homo sapiens*, *Gorilla gorilla*"]
+        R(Root) -.-> O(*Opisthokonta*) --> M(*Metazoa*)
+        subgraph cluster2 ["*Lagomorpha*, *Homo sapiens*, *Gorilla gorilla*"]
+            M -.-> E(*Euarchontoglires*)
+            E -.-> HN(*Homininae*)
+            subgraph cluster3 ["*Homo sapiens*, *Gorilla gorilla*"]
                 HN
             end
         end
     end
-    HN -.-> H(Homo sapiens)
-    HN -.-> GG(Gorilla gorilla)
-    E --> G(Glires)
-    G --> L(Lagomorpha)
-    O --> F(Fungi) -...-> S(Saccharomyces)
+    HN -.-> H(*Homo sapiens*)
+    HN -.-> GG(*Gorilla gorilla*)
+    E --> G(*Glires*)
+    G --> L(*Lagomorpha*)
+    O --> F(*Fungi*) -...-> S(*Saccharomyces*)
 ```
 
 If we consider *Lagomorpha*, *Homo sapiens*, and *Gorilla gorilla* (ignoring *Saccharomyces* for now), the most specific taxon that is shared by more than half of these three taxa is *Homininae*, which is common to two of them. However, if we want to determine the most specific taxon that is common to more than two-thirds of the lineages, we can change the value of `fraction` to `0.67`. This will return *Euarchontoglires*, which, in this particular case, is also the LCA of the three lineages.

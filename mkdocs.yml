@@ -68,9 +68,14 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          inventories:
+            - https://docs.python.org/3/objects.inv
           paths: [.]
           options:
+            backlinks: tree
             docstring_style: numpy
+            inherited_members: true
+            modernize_annotations: true
             separate_signature: true
             show_root_heading: true
             show_signature_annotations: true
@@ -78,6 +83,7 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
             signature_crossrefs: true
-            inherited_members: true
 extra_css:
   - stylesheets/extra.css
+extra_javascript:
+  - js/mermaid.mjs
