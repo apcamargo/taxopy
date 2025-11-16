@@ -72,7 +72,6 @@ plugins:
             - https://docs.python.org/3/objects.inv
           paths: [.]
           options:
-            backlinks: tree
             docstring_style: numpy
             inherited_members: true
             modernize_annotations: true
