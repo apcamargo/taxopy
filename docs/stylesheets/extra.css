@@ -27,3 +27,12 @@ figcaption {
 .highlight .go {
     user-select: none;
 }
+
+/* Apply a translucent accent-color highlight to selected text. */
+::selection {
+    background-color: color-mix(
+        in srgb,
+        var(--md-accent-fg-color) 22.5%,
+        transparent
+    );
+}

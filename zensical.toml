@@ -69,7 +69,7 @@ text = "Inter"
 code = "JetBrains Mono"
 
 [project.theme.icon]
-logo = "lucide/tree-pine"
+logo = "lucide/tag"
 repo = "fontawesome/brands/github"
 
 # Palette toggle for automatic mode
