@@ -20,7 +20,11 @@ classifiers = [
 
 [project.optional-dependencies]
 fuzzy-matching = ["rapidfuzz"]
+test = ["pytest>=7,<9; python_version >= '3.8'"]
 
 [project.urls]
 Documentation = "https://apcamargo.github.io/taxopy"
 Repository = "https://github.com/apcamargo/taxopy"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -8,7 +8,7 @@
 
 ## Installation
 
-There are two ways to install `taxopy`:
+There are several ways to install `taxopy`:
 
   - Using pip:
 
@@ -16,10 +16,34 @@ There are two ways to install `taxopy`:
 pip install taxopy
 ```
 
+  - Using uv:
+
+```
+uv init example
+cd example
+uv add taxopy
+```
+
   - Using conda:
 
 ```
-conda install -c conda-forge -c bioconda taxopy
+conda create -n taxopy-env -c conda-forge -c bioconda taxopy
+conda activate taxopy-env
+```
+
+  - Using pixi:
+
+```
+pixi init --channel conda-forge --channel bioconda example
+cd example
+pixi add taxopy
+```
+
+  - Using mamba:
+
+```
+mamba create -n taxopy-env -c conda-forge -c bioconda taxopy
+mamba activate taxopy-env
 ```
 
 > [!NOTE]
@@ -218,6 +242,20 @@ for t in taxopy.taxid_from_name(
     Myxococcia
     Myxococcota
     Myxococcaceae
+
+## Running tests
+
+Install the test dependencies and run the default test suite with `uv`:
+
+```bash
+uv run --extra test pytest
+```
+
+The repository also includes integration tests that download the taxonomy dump through `taxopy` itself. These tests are skipped by default because they require network access and depend on the current NCBI taxonomy data. Run them explicitly with:
+
+```bash
+uv run --extra test pytest --run-network
+```
 
 ## Acknowledgements
 
